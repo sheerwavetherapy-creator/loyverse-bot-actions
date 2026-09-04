@@ -1,0 +1,33 @@
+name: Disable Render Telegrams (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "YES" to run the disable script (required)'
+        required: true
+        default: 'NO'
+
+jobs:
+  disable:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Make script executable
+        run: chmod +x scripts/disable-all-render-telegrams.sh
+
+      - name: Require explicit confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "YES" ]; then
+            echo "Confirmation not YES — exiting without changes."
+            exit 1
+          fi
+
+      - name: Run disable script (calls Render API)
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          set -euo pipefail
+          ./scripts/disable-all-render-telegrams.sh
