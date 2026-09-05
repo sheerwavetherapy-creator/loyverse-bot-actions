@@ -22,14 +22,20 @@ function parseArgs(argv) {
     }
   }
   if (unrecognized.length > 0) {
-    console.error(`Unrecognized argument(s): ${unrecognized.join(', ')}`);
-    process.exit(1);
+    throw new Error(`Unrecognized argument(s): ${unrecognized.join(', ')}`);
   }
   return args;
 }
 
 function main() {
-  const args = parseArgs(process.argv.slice(2));
+  let args;
+  try {
+    args = parseArgs(process.argv.slice(2));
+  } catch (err) {
+    console.error(err.message);
+    process.exit(1);
+  }
+
   const enableTelegramSends = process.env.ENABLE_TELEGRAM_SENDS === 'true';
   const cutoffReceipt = process.env.LOYVERSE_REPLAY_CUTOFF_RECEIPT || '';
 
@@ -48,4 +54,8 @@ function main() {
   console.log('No external API calls will be made during a dry-run.');
 }
 
-main();
+module.exports = { parseArgs };
+
+if (require.main === module) {
+  main();
+}
