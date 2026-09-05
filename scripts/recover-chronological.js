@@ -13,10 +13,17 @@
 
 function parseArgs(argv) {
   const args = { dryRun: false };
+  const unrecognized = [];
   for (const arg of argv) {
     if (arg === '--dry-run') {
       args.dryRun = true;
+    } else {
+      unrecognized.push(arg);
     }
+  }
+  if (unrecognized.length > 0) {
+    console.error(`Unrecognized argument(s): ${unrecognized.join(', ')}`);
+    process.exit(1);
   }
   return args;
 }
