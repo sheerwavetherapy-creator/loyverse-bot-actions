@@ -5,7 +5,8 @@
   "description": "Operational scripts and GitHub Actions for managing the Loyverse Telegram bot on Render.",
   "scripts": {
     "build": "node -e \"console.log('No build step required.')\"",
-    "recover:chronological": "node scripts/recover-chronological.js"
+    "recover:chronological": "node scripts/recover-chronological.js",
+    "test": "node --test"
   },
   "license": "UNLICENSED"
 }

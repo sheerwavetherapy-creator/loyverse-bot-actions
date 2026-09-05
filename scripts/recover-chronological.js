@@ -11,28 +11,34 @@
  * performed regardless of `ENABLE_TELEGRAM_SENDS`.
  */
 
-const isDryRun = process.argv.includes('--dry-run');
-const telegramSendsRequested = process.env.ENABLE_TELEGRAM_SENDS === 'true';
+function buildConfig(argv, env) {
+  const isDryRun = argv.includes('--dry-run');
+  const telegramSendsRequested = env.ENABLE_TELEGRAM_SENDS === 'true';
 
-const config = {
-  renderApiKey: process.env.RENDER_API_KEY || '',
-  serviceId: process.env.SERVICE_ID || '',
-  cutoffReceipt: process.env.LOYVERSE_REPLAY_CUTOFF_RECEIPT || '',
-  telegramSendsEnabled: telegramSendsRequested && !isDryRun,
-};
-
-if (isDryRun && telegramSendsRequested) {
-  console.warn(
-    'ENABLE_TELEGRAM_SENDS=true was set, but --dry-run forces Telegram sends to remain disabled.'
-  );
+  return {
+    isDryRun,
+    telegramSendsRequested,
+    renderApiKey: env.RENDER_API_KEY || '',
+    serviceId: env.SERVICE_ID || '',
+    cutoffReceipt: env.LOYVERSE_REPLAY_CUTOFF_RECEIPT || '',
+    telegramSendsEnabled: telegramSendsRequested && !isDryRun,
+  };
 }
 
-function main() {
-  console.log(`Chronological replay starting (dry-run: ${isDryRun})`);
+function main(argv, env) {
+  const config = buildConfig(argv, env);
+
+  if (config.isDryRun && config.telegramSendsRequested) {
+    console.warn(
+      'ENABLE_TELEGRAM_SENDS=true was set, but --dry-run forces Telegram sends to remain disabled.'
+    );
+  }
+
+  console.log(`Chronological replay starting (dry-run: ${config.isDryRun})`);
   console.log(`Cutoff receipt: ${config.cutoffReceipt || '(none)'}`);
   console.log(`Telegram sends enabled: ${config.telegramSendsEnabled}`);
 
-  if (isDryRun) {
+  if (config.isDryRun) {
     console.log('Dry-run mode: no data will be modified and no Telegram messages will be sent.');
   }
 
@@ -44,4 +50,8 @@ function main() {
   console.log('Chronological replay completed.');
 }
 
-main();
+if (require.main === module) {
+  main(process.argv.slice(2), process.env);
+}
+
+module.exports = { buildConfig, main };
