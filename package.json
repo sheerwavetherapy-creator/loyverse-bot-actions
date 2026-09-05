@@ -1,0 +1,13 @@
+{
+  "name": "loyverse-bot-actions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Manual GitHub Actions workflows and scripts for administering the Loyverse bot on Render.",
+  "scripts": {
+    "build": "echo \"No build step required\"",
+    "recover:chronological": "node scripts/recover-chronological.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
