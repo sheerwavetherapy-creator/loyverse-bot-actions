@@ -27,6 +27,10 @@ function log(message) {
 }
 
 function main() {
+  // TODO: This is a placeholder implementation. It currently only logs the
+  // configured options and does not yet fetch, replay, or forward any
+  // Loyverse receipts. Replace with the real chronological recovery logic
+  // (tracking issue pending) before relying on this in production.
   log(`Starting chronological recovery (dry-run: ${isDryRun})`);
 
   if (cutoffReceipt) {
