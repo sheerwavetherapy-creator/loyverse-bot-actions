@@ -8,6 +8,10 @@
  * It supports a `--dry-run` flag which, when present, ensures no external
  * side effects (like sending Telegram messages) are performed. This is
  * enforced regardless of other configuration to keep CI/manual dry-runs safe.
+ *
+ * TODO: This is currently a placeholder that only logs its inputs and does
+ * not yet fetch receipts from Loyverse or forward them to Telegram. Replace
+ * the body of `main()` with the real chronological replay/recovery logic.
  */
 
 'use strict';
