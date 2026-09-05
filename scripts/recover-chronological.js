@@ -12,13 +12,20 @@
  */
 
 const isDryRun = process.argv.includes('--dry-run');
+const telegramSendsRequested = process.env.ENABLE_TELEGRAM_SENDS === 'true';
 
 const config = {
   renderApiKey: process.env.RENDER_API_KEY || '',
   serviceId: process.env.SERVICE_ID || '',
   cutoffReceipt: process.env.LOYVERSE_REPLAY_CUTOFF_RECEIPT || '',
-  telegramSendsEnabled: process.env.ENABLE_TELEGRAM_SENDS === 'true' && !isDryRun,
+  telegramSendsEnabled: telegramSendsRequested && !isDryRun,
 };
+
+if (isDryRun && telegramSendsRequested) {
+  console.warn(
+    'ENABLE_TELEGRAM_SENDS=true was set, but --dry-run forces Telegram sends to remain disabled.'
+  );
+}
 
 function main() {
   console.log(`Chronological replay starting (dry-run: ${isDryRun})`);
