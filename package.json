@@ -1,0 +1,11 @@
+{
+  "name": "loyverse-bot-actions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Automation scripts and GitHub Actions workflows for the Loyverse bot.",
+  "scripts": {
+    "build": "echo \"No build step required\" && exit 0",
+    "recover:chronological": "node scripts/recover-chronological.js"
+  },
+  "license": "MIT"
+}
