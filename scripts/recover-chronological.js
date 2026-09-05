@@ -36,6 +36,8 @@ function main() {
   if (!args.dryRun) {
     // Safety net: this entry point should only ever be invoked with --dry-run
     // until a real, reviewed implementation is added.
+    // TODO: implement the live (non-dry-run) chronological recovery/replay
+    // logic and remove this restriction once it has been reviewed.
     console.error('recover:chronological currently only supports --dry-run mode.');
     process.exit(1);
   }
