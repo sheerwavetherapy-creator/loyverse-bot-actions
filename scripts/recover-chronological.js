@@ -21,13 +21,9 @@ console.log(`  mode: ${dryRun ? 'dry-run' : 'LIVE'}`);
 console.log(`  cutoff receipt: ${cutoffReceipt || '(none)'}`);
 console.log(`  telegram sends enabled: ${telegramSendsEnabled}`);
 
-if (!dryRun && telegramSendsEnabled) {
+if (!dryRun) {
   console.error('Refusing to run a live replay from this repository.');
   process.exit(1);
 }
 
-if (dryRun) {
-  console.log('Dry-run complete: no receipts to replay from this repository.');
-} else {
-  console.log('Live mode: nothing to replay from this repository.');
-}
+console.log('Dry-run complete: no receipts to replay from this repository.');
