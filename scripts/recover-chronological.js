@@ -26,4 +26,8 @@ if (!dryRun && telegramSendsEnabled) {
   process.exit(1);
 }
 
-console.log('Dry-run complete: no receipts to replay from this repository.');
+if (dryRun) {
+  console.log('Dry-run complete: no receipts to replay from this repository.');
+} else {
+  console.log('Live mode: nothing to replay from this repository.');
+}
