@@ -48,6 +48,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           LOYVERSE_REPLAY_CUTOFF_RECEIPT: ${{ github.event.inputs.cutoff_receipt || secrets.LOYVERSE_REPLAY_CUTOFF_RECEIPT || '' }}
           ENABLE_TELEGRAM_SENDS: 'false'
+          ALLOW_HISTORICAL_RECOVERY: 'true'
         run: |
           set -euo pipefail
           # enforce dry-run flag for safety
