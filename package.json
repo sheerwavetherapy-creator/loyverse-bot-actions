@@ -1,0 +1,12 @@
+{
+  "name": "loyverse-bot-actions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Support scripts and CI workflows for Loyverse bot chronological replay/recovery.",
+  "scripts": {
+    "build": "node -e \"console.log('No build step required')\"",
+    "recover:chronological": "node scripts/recover-chronological.js",
+    "test": "node --test scripts/*.test.js"
+  },
+  "license": "UNLICENSED"
+}
