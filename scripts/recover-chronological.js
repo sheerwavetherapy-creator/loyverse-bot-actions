@@ -29,6 +29,11 @@ function main() {
     console.log('Dry-run mode: no data will be modified and no Telegram messages will be sent.');
   }
 
+  // TODO: implement the actual chronological replay logic, which should use
+  // config.renderApiKey and config.serviceId to fetch/replay Loyverse
+  // receipts against Render, honoring config.cutoffReceipt and
+  // config.telegramSendsEnabled. Currently this is a CI-safe placeholder
+  // that only reports its configuration and performs no network calls.
   console.log('Chronological replay completed.');
 }
 
