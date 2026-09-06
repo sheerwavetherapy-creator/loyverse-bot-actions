@@ -1,0 +1,77 @@
+name: Replay Chronological (LIVE)
+
+on:
+  workflow_dispatch:
+    inputs:
+      cutoff_receipt:
+        description: 'LOYVERSE_REPLAY_CUTOFF_RECEIPT (e.g. 1-4167). Leave blank to use the repo secret.'
+        required: false
+        default: ''
+      confirm:
+        description: 'Type "SEND" to authorize a LIVE replay that sends real Telegram messages'
+        required: true
+        default: 'NO'
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    # Recommended: protect this with a GitHub Environment named "live-replay"
+    # that requires manual approval. Uncomment the next line after creating it.
+    # environment: live-replay
+    steps:
+      - name: Require explicit SEND confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "SEND" ]; then
+            echo "Confirmation was not 'SEND' — aborting without sending anything."
+            exit 1
+          fi
+
+      - name: Checkout recovery workflow
+        uses: actions/checkout@v4
+
+      - name: Checkout Loyverse-Bot
+        uses: actions/checkout@v4
+        with:
+          repository: sheerwavetherapy-creator/Loyverse-Bot
+          token: ${{ secrets.LOYVERSE_BOT_REPO_TOKEN }}
+          path: app
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install
+        working-directory: app
+        run: npm install
+
+      - name: Build
+        working-directory: app
+        run: npm run build
+
+      - name: Run chronological recovery (LIVE — sends Telegram messages)
+        working-directory: app
+        env:
+          LOYVERSE_API_TOKEN: ${{ secrets.LOYVERSE_API_TOKEN }}
+          LOYVERSE_WEBHOOK_SECRET: ${{ secrets.LOYVERSE_WEBHOOK_SECRET }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          LOYVERSE_REPLAY_CUTOFF_RECEIPT: ${{ github.event.inputs.cutoff_receipt || secrets.LOYVERSE_REPLAY_CUTOFF_RECEIPT || '' }}
+          PRIMARY_SENDER_ENABLED: 'true'
+          ENABLE_TELEGRAM_SENDS: 'true'
+          ALLOW_HISTORICAL_RECOVERY: 'true'
+        run: |
+          set -euo pipefail
+          : "${LOYVERSE_REPLAY_CUTOFF_RECEIPT:?Set cutoff_receipt or LOYVERSE_REPLAY_CUTOFF_RECEIPT before running recovery.}"
+          echo "LIVE replay after receipt ${LOYVERSE_REPLAY_CUTOFF_RECEIPT}. This sends real Telegram messages."
+          npm run recover:chronological -- --after-receipt="${LOYVERSE_REPLAY_CUTOFF_RECEIPT}"
+
+      - name: Upload data artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: chronological-replay-live-artifacts
+          path: |
+            app/data/*.json
+            app/replay-output/*.json
+            app/logs/*.log
+          if-no-files-found: ignore
