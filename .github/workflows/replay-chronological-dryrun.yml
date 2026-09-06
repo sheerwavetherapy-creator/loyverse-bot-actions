@@ -52,7 +52,7 @@ jobs:
         run: |
           set -euo pipefail
           : "${LOYVERSE_REPLAY_CUTOFF_RECEIPT:?Set cutoff_receipt or LOYVERSE_REPLAY_CUTOFF_RECEIPT before running recovery.}"
-          npm run recover:chronological -- --dry-run --after-receipt "${LOYVERSE_REPLAY_CUTOFF_RECEIPT}"
+          npm run recover:chronological -- --dry-run
 
       - name: Upload data artifacts
         uses: actions/upload-artifact@v4
