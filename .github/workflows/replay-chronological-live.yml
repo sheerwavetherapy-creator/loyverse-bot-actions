@@ -56,6 +56,7 @@ jobs:
           LOYVERSE_WEBHOOK_SECRET: ${{ secrets.LOYVERSE_WEBHOOK_SECRET }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_PAYINPAYOUT_TOPIC_ID: ${{ secrets.TELEGRAM_PAYINPAYOUT_TOPIC_ID }}
           LOYVERSE_REPLAY_CUTOFF_RECEIPT: ${{ github.event.inputs.cutoff_receipt || secrets.LOYVERSE_REPLAY_CUTOFF_RECEIPT || '' }}
           PRIMARY_SENDER_ENABLED: 'true'
           ENABLE_TELEGRAM_SENDS: 'true'

@@ -46,13 +46,14 @@ jobs:
           LOYVERSE_WEBHOOK_SECRET: ${{ secrets.LOYVERSE_WEBHOOK_SECRET }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_PAYINPAYOUT_TOPIC_ID: ${{ secrets.TELEGRAM_PAYINPAYOUT_TOPIC_ID }}
           LOYVERSE_REPLAY_CUTOFF_RECEIPT: ${{ github.event.inputs.cutoff_receipt || secrets.LOYVERSE_REPLAY_CUTOFF_RECEIPT || '' }}
           ENABLE_TELEGRAM_SENDS: 'false'
           ALLOW_HISTORICAL_RECOVERY: 'true'
         run: |
           set -euo pipefail
           : "${LOYVERSE_REPLAY_CUTOFF_RECEIPT:?Set cutoff_receipt or LOYVERSE_REPLAY_CUTOFF_RECEIPT before running recovery.}"
-          npm run recover:chronological -- --dry-run --after-receipt "${LOYVERSE_REPLAY_CUTOFF_RECEIPT}"
+          npm run recover:chronological -- --dry-run --after-receipt="${LOYVERSE_REPLAY_CUTOFF_RECEIPT}"
 
       - name: Upload data artifacts
         uses: actions/upload-artifact@v4
