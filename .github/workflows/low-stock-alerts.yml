@@ -1,0 +1,32 @@
+name: Low Stock Alerts
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6,17 * * *'
+
+jobs:
+  low-stock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate low stock alert block
+        env:
+          EXPORT_CSV_PATH: ${{ vars.EXPORT_CSV_PATH || 'export_items-11.csv' }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_INVENTORY_TOPIC_ID: ${{ vars.TELEGRAM_INVENTORY_TOPIC_ID || '4442209616/1895' }}
+          LOYVERSE_API_TOKEN: ${{ secrets.LOYVERSE_API_TOKEN }}
+          LOYVERSE_API_BASE_URL: https://api.loyverse.com/v1.0
+          SEND_TELEGRAM_MESSAGE: 'true'
+          EVENT_TIME: ${{ github.event.repository.pushed_at || format('{0:O}', now()) }}
+        run: |
+          set -euo pipefail
+          python3 scripts/low_stock_alerts.py
