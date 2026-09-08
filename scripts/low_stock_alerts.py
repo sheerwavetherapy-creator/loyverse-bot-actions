@@ -85,6 +85,19 @@ def first_non_empty(*values: Any) -> Any:
     return None
 
 
+def first_header_value(headers: dict[str, Any], exact_names: Iterable[str], prefixes: Iterable[str]) -> Any:
+    value = first_non_empty(*(headers.get(name) for name in exact_names))
+    if value is not None:
+        return value
+    for key, candidate in headers.items():
+        lowered_key = key.lower()
+        if any(lowered_key.startswith(prefix.lower()) for prefix in prefixes):
+            value = first_non_empty(candidate)
+            if value is not None:
+                return value
+    return None
+
+
 def parse_export_csv(csv_path: str | os.PathLike[str]) -> list[dict[str, Any]]:
     """Read CSV rows, with support for the export_items-11.csv schema.
 
@@ -126,19 +139,15 @@ def parse_export_csv(csv_path: str | os.PathLike[str]) -> list[dict[str, Any]]:
                 normalized.get("Item Cost"),
                 normalized.get("Cost (per unit)"),
             )
-            qty = first_non_empty(
-                normalized.get("Quantity"),
-                normalized.get("Qty"),
-                normalized.get("Quantity in Stock"),
-                normalized.get("Stock"),
-                normalized.get("Inventory Quantity"),
+            qty = first_header_value(
+                normalized,
+                ("Quantity", "Qty", "Quantity in Stock", "Stock", "Inventory Quantity"),
+                ("In stock [",),
             )
-            threshold = first_non_empty(
-                normalized.get("Low Stock Alert Threshold"),
-                normalized.get("Low Stock Threshold"),
-                normalized.get("Threshold"),
-                normalized.get("Low Stock"),
-                normalized.get("U"),
+            threshold = first_header_value(
+                normalized,
+                ("Low Stock Alert Threshold", "Low Stock Threshold", "Threshold", "Low Stock", "U"),
+                ("Low stock [",),
             )
 
             threshold_dec = parse_threshold_value(threshold)
@@ -169,6 +178,16 @@ def format_money(value: Any) -> str:
     return format(amount.normalize(), "f")
 
 
+def format_quantity(value: Any) -> str:
+    try:
+        quantity = Decimal(str(value).strip())
+    except (InvalidOperation, ValueError):
+        return str(value).strip()
+    if quantity == quantity.to_integral_value():
+        return f"{quantity.quantize(Decimal('1'))}"
+    return format(quantity.normalize(), "f")
+
+
 def build_alert_block(rows: Iterable[dict[str, Any]]) -> str:
     grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
     checked_count = 0
@@ -196,7 +215,7 @@ def build_alert_block(rows: Iterable[dict[str, Any]]) -> str:
     if not grouped:
         return "No low stock items at this time."
 
-    lines: list[str] = []
+    lines: list[str] = ["<b>🚨 LOW STOCK ALERT</b>"]
     for category in sorted(grouped.keys(), key=lambda value: value.lower()):
         items = sorted(
             grouped[category],
@@ -208,7 +227,7 @@ def build_alert_block(rows: Iterable[dict[str, Any]]) -> str:
             qty = row.get("quantity")
             item_name = str(row["item_name"]).strip()
             lines.append(
-                f"{item_name} | PC: {format_money(cost)} | QTY: {qty}"
+                f"{item_name} | PC: {format_money(cost)} KSh | QTY: {format_quantity(qty)}"
             )
         lines.append("")
     return "\n".join(lines).strip()

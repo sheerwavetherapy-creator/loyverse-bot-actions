@@ -9,7 +9,9 @@ from scripts.low_stock_alerts import (
     is_antiquated_event,
     is_older_than_last_processed,
     normalize_name,
+    parse_export_csv,
     parse_threshold_value,
+    format_quantity,
     set_latest_topic_timestamp,
 )
 
@@ -20,11 +22,31 @@ def test_parse_threshold_value_handles_empty_and_numeric_values():
     assert parse_threshold_value("12.5") == Decimal("12.5")
 
 
+def test_parse_export_csv_reads_location_suffixed_stock_headers(tmp_path):
+    csv_path = tmp_path / "export_items-11.csv"
+    csv_path.write_text(
+        "Name,Category,Cost,In stock [Pink Tamu Swahili Cafe & Restaurant],"
+        "Low stock [Pink Tamu Swahili Cafe & Restaurant]\n"
+        '"Bottled Water, 10L",Maji,120.00,4.000,4.000\n',
+        encoding="utf-8",
+    )
+
+    rows = parse_export_csv(csv_path)
+
+    assert rows[0]["item_name"] == "Bottled Water, 10L"
+    assert rows[0]["quantity"] == "4.000"
+    assert rows[0]["threshold"] == Decimal("4.000")
+
+
+def test_format_quantity_removes_inventory_decimal_padding():
+    assert format_quantity("4.000") == "4"
+
+
 def test_build_alert_block_groups_by_category_and_orders_alpha():
     rows = [
         {
             "category": "Snacks",
-            "item_name": "Chips",
+            "item_name": "Chips 🥔",
             "cost": "2.50",
             "quantity": "5",
             "threshold": Decimal("10"),
@@ -45,10 +67,12 @@ def test_build_alert_block_groups_by_category_and_orders_alpha():
         },
     ]
     block = build_alert_block(rows)
+    assert block.startswith("<b>🚨 LOW STOCK ALERT</b>")
     assert "ALCOHOL" in block
     assert "Beer" in block
     assert "Wine" in block
     assert "Chips" in block
+    assert "Chips 🥔 | PC: 2.5 KSh | QTY: 5" in block
     assert block.index("ALCOHOL") < block.index("SNACKS")
 
 
