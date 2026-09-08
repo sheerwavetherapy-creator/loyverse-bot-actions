@@ -14,12 +14,20 @@ from scripts.low_stock_alerts import (
     format_quantity,
     set_latest_topic_timestamp,
 )
+from scripts.telegram_lowstock_bot import is_lowstock_command
 
 
 def test_parse_threshold_value_handles_empty_and_numeric_values():
     assert parse_threshold_value("") is None
     assert parse_threshold_value(" 12 ") == Decimal("12")
     assert parse_threshold_value("12.5") == Decimal("12.5")
+
+
+def test_lowstock_command_accepts_bot_suffix_and_rejects_similar_commands():
+    assert is_lowstock_command("/lowstock") is True
+    assert is_lowstock_command("/lowstock@inventory_bot") is True
+    assert is_lowstock_command("/lowstock now") is True
+    assert is_lowstock_command("/lowstocks") is False
 
 
 def test_parse_export_csv_reads_location_suffixed_stock_headers(tmp_path):
