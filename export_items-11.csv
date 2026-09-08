@@ -1,0 +1,370 @@
+Handle,SKU,Name,Category,Description,Sold by weight,Option 1 name,Option 1 value,Option 2 name,Option 2 value,Option 3 name,Option 3 value,Cost,Barcode,SKU of included item,Quantity of included item,Track stock,Available for sale [Pink Tamu Swahili Cafe & Restaurant],Price [Pink Tamu Swahili Cafe & Restaurant],In stock [Pink Tamu Swahili Cafe & Restaurant],Low stock [Pink Tamu Swahili Cafe & Restaurant]
+4th-street-red-wine,4SR24,4th Street Red Wine 750ml,Alcohol,,N,,,,,,,1200.00,,,,Y,Y,2300.00,1.000,
+afia-soft-drink,AFI41,Afia Soft Drink,Nonalc Drinks,,N,,,,,,,80.00,,,,Y,Y,120.00,8.000,
+airtel-airtime,AIR41,Airtel Airtime,General,,N,,,,,,,1.00,,,,Y,Y,1.00,0.000,
+all-seasons-whisky-250ml,ASW38,All Seasons Whisky 250ml,Alcohol,,N,,,,,,,320.00,,,,Y,Y,540.00,1.000,
+amarula-750ml,AMA47,Amarula 750ml,Alcohol,,N,,,,,,,1900.00,,,,Y,Y,3280.00,1.000,
+azam-energy-drink,AZA65,Azam Energy Drink,Nonalc Drinks,,N,,,,,,,71.00,,,,Y,Y,120.00,17.000,4.000
+bag/secure-storage-fee,BAG-FEE,Bag/Secure Storage Fee,Services,,N,,,,,,,0.00,,,,N,Y,variable,,
+"baking-powder,-100g---supa-mandazi",BAK10,"Baking Powder, 100g - Supa Mandazi",General,,N,,,,,,,35.00,,,,Y,Y,80.00,5.000,
+balloon-🎈,10005,Balloon 🎈,General,,N,,,,,,,17.50,,,,N,Y,25.00,,
+balozi,BAL04,Balozi 500ml can,Alcohol,,N,,,,,,,220.00,,,,Y,Y,350.00,10.000,3.000
+banana,BAN41,Banana 🍌,Food,,N,,,,,,,10.00,,,,N,Y,20.00,,
+"bandage-dress,-red,-size-4-8",BAN-RED,"Bandage Dress, red, size 4-8",Fashion,,N,,,,,,,650.00,,,,Y,Y,7300.00,1.000,
+beef-(per-gram),BEEFD62,Beef 1/4kg 🥩,Food,"<ul><li>Use weighing scale for confirmation of weight in grams</li><li>Selling cost of 1 gram = 1.30 KSh</li><li>nyama, steak</li></ul>",N,Wet or Deep Fry?,Deep Fry,,,,,277.50,,,,N,Y,620.00,,
+beef-(per-gram),BEEFW62,,,,,,Wet Fry,,,,,277.50,,,,,Y,620.00,,
+beef-stew,10008,Beef ½kg🥩,Food,,N,Wet or Deep Fry?,Deep Fry,,,,,555.00,,,,N,Y,1135.00,,
+beef-stew,10006,,,,,,Wet Fry,,,,,555.00,,,,,Y,1135.00,,
+beef-burger-🍔,SIN66,Beef Patty Burger 🍔,Food,,N,Size,Single 140g Patty,,,,,121.50,,,,N,Y,380.00,,
+bergen-brownie-hazelnut,BER58,Bergen Brownie Hazelnut Cookies,Snacks,,N,,,,,,,340.00,,,,Y,Y,480.00,1.000,
+"bergen-obsession-caramel-&-delicacies-chocolate-cookies,-128g",BER48,"Bergen Obsession Caramel & Delicacies Chocolate Cookies, 128g",Snacks,,N,,,,,,,340.00,,,,Y,Y,500.00,1.000,
+best-london-dry-gin,BES75,Best London Dry Gin 750ml,Alcohol,,N,,,,,,,1000.00,,,,Y,Y,2220.00,1.000,
+best-london-dry-gin-shot-bes75,BES75-H125,Best London Dry Gin Shot,Shots,,N,Size,125ml - Half Quarter,,,,,166.67,,,,N,Y,300.00,,
+best-london-dry-gin-shot-bes75,BES75-B150,,,,,,150ml - Big Shot,,,,,200.00,,,,,Y,430.00,,
+best-london-dry-gin-shot-bes75,BES75-T25,,,,,,25ml - Tiny Shot,,,,,33.33,,,,,Y,90.00,,
+best-london-dry-gin-shot-bes75,BES75-M75,,,,,,75ml - Medium Shot,,,,,100.00,,,,,Y,230.00,,
+bianco-nobile-white-wine,BIA97,Bianco Nobile White Wine 750ml,Alcohol,,N,,,,,,,1200.00,,,,Y,Y,2400.00,1.000,
+big-g-(chewing-gum),BIG66,Big G (Chewing Gum),General,,N,,,,,,,5.00,,,,Y,Y,7.50,38.000,10.000
+biscuit,BIS16,"Biscuit, Cream",Snacks,<p>Cream</p>,N,,,,,,,8.00,,,,Y,Y,15.00,92.000,
+biscuit-1,BIS87,"Biscuit, No Cream",Snacks,<p>No cream</p>,N,,,,,,,6.00,,,,Y,Y,10.00,0.000,
+black-&-white-whiskey-750ml,BLA03,Black & White Whiskey 750ml,Alcohol,,N,,,,,,,1205.00,,,,Y,Y,2250.00,3.000,
+black-white-whiskey-shot-bla03,BLA03-H125,Black & White Whiskey Shot,Shots,,N,Size,125ml - Half Quarter,,,,,200.83,,,,N,Y,360.00,,
+black-white-whiskey-shot-bla03,BLA03-B150,,,,,,150ml - Big Shot,,,,,241.00,,,,,Y,520.00,,
+black-white-whiskey-shot-bla03,BLA03-T25,,,,,,25ml - Tiny Shot,,,,,40.17,,,,,Y,100.00,,
+black-white-whiskey-shot-bla03,BLA03-M75,,,,,,75ml - Medium Shot,,,,,120.50,,,,,Y,280.00,,
+fanta-blackcurrant,FAN49,"Blackcurrant, 300ml",Nonalc Drinks,<p>300ml glass bottle</p>,N,,,,,,,40.00,,,,Y,Y,110.00,12.000,5.000
+boda-🏍️,BODA,Boda Transport 🏍️,Transportation,<ul><li>motorbike</li><li>transport</li></ul>,N,,,,,,,0.00,,,,N,Y,variable,,
+bottle-opener,BOT87,Bottle Opener,General,,N,,,,,,,150.00,,,,Y,Y,170.00,6.000,2.000
+"bottled-water,-1.5l",WAT43,"Bottled Water, 1.5L",Maji,<p>Sealed Bottle</p>,N,,,,,,,33.00,,,,Y,Y,160.00,52.000,10.000
+"bottled-water,-10l",WAT45,"Bottled Water, 10L",Maji,<p>Sealed Bottle</p>,N,,,,,,,120.00,,,,Y,Y,400.00,4.000,4.000
+"bottled-water,-500ml",WAT42,"Bottled Water, 500ml",Maji,<p>Sealed Bottle</p>,N,,,,,,,30.00,,,,Y,Y,70.00,33.000,15.000
+bread,BRE47,Bread 🍞,Food,,N,,,,,,,0.00,,,,N,Y,100.00,,
+cabbage,CAB12,Cabbage 🥬,Food,,N,,,,,,,0.00,,,,N,Y,100.00,,
+"camino-tequila,-700ml",TEQ29,"Camino Real Blanco Tequila, 700ml",Alcohol,<p>Camino Real Blanco Tequila</p>,N,,,,,,,2900.00,,,,Y,Y,4600.00,1.000,0.000
+camino-real-real-blanco-shot,TEQ150BS,Camino Real Tequila Blanco Shot,Shots,,N,Shot Size,150ml - Big Shot,,,,,252.00,,,,N,Y,600.00,,
+camino-real-real-blanco-shot,TEQ25,,,,,,25ml - Tiny Shot,,,,,41.00,,,,,Y,130.00,,
+camino-real-real-blanco-shot,TEQMS75,,,,,,75ml - Medium Shot,,,,,126.00,,,,,Y,320.00,,
+candle-🕯,CAN32,Candle 🕯,General,,N,,,,,,,10.00,,,,N,Y,30.00,,
+caprice,CAP50,Caprice Box Wine,Alcohol,<p>Red Wine</p>,N,,,,,,,900.00,,,,Y,Y,1800.00,0.000,
+captain-morgan-rum-750ml,CAP75,Captain Morgan Gold Rum 750ml,Alcohol,,N,,,,,,,994.00,,,,Y,Y,2300.00,1.000,
+captain-morgan-gold-rum-shot-cap75,CAP75-H125,Captain Morgan Gold Rum Shot,Shots,,N,Size,125ml - Half Quarter,,,,,165.67,,,,N,Y,300.00,,
+captain-morgan-gold-rum-shot-cap75,CAP75-B150,,,,,,150ml - Big Shot,,,,,198.80,,,,,Y,430.00,,
+captain-morgan-gold-rum-shot-cap75,CAP75-T25,,,,,,25ml - Tiny Shot,,,,,33.13,,,,,Y,90.00,,
+captain-morgan-gold-rum-shot-cap75,CAP75-M75,,,,,,75ml - Medium Shot,,,,,99.40,,,,,Y,230.00,,
+carrier-bag-(cotton),CRB79,Carrier Bag (Cotton),General,,N,,,,,,,0.00,,,,N,Y,30.00,,
+cell-phone-charge,SRV04,Cell Phone Charge 📱,Services,,N,,,,,,,0.00,,,,N,Y,30.00,,
+ceramic/glass-bowl,BOWL,Ceramic/Glass Bowl,General,,N,,,,,,,235.00,,,,Y,Y,300.00,5.000,
+ceramic/glass-plate,PLATE,Ceramic/Glass Plate,General,,N,,,,,,,235.00,,,,Y,Y,300.00,8.000,
+chips-–-large,CHIPS-L,Chips – Large 🍟,Food,,N,,,,,,,0.00,,,,N,Y,210.00,,
+chips-–-small,CHIPS-S,Chips – Small 🍟,Food,,N,,,,,,,0.00,,,,N,Y,150.00,,
+choc-chip-cookies-200g,CHO32,Choc-Chip Cookies 200g,Snacks,,N,,,,,,,199.00,,,,Y,Y,290.00,-1.000,
+"chocolate-milk,-glass-of",CHO22,"Chocolate Milk, Glass of",Nonalc Drinks,,N,,,,,,,0.00,,,,N,Y,100.00,,
+chocolate-🍫---cadbury-bournville,CHO44,Chocolate 🍫 - Cadbury Bournville Dairy Milk,Food,,N,,,,,,,290.00,,,,Y,Y,395.00,3.000,2.000
+chrome-gin---125ml,CHR89,Chrome Gin - 125ml,Shots,,N,,,,,,,0.00,,,,N,Y,175.00,,
+chrome-gin-250ml,CHR66,Chrome Gin 250ml,Alcohol,,N,,,,,,,208.00,,,,Y,Y,340.00,7.000,
+chrome-vodka-250ml,CHR25,Chrome Vodka 250ml,Alcohol,,N,,,,,,,217.00,,,,Y,Y,350.00,11.000,4.000
+chrome-vodka-750ml,CHR80,Chrome Vodka 750ml,Alcohol,,N,,,,,,,670.00,,,,Y,Y,1350.00,2.000,
+chrome-vodka-shot-chr80,CHR80-H125,Chrome Vodka Shot,Shots,,N,Size,125ml - Half Quarter,,,,,111.67,,,,N,Y,200.00,,
+chrome-vodka-shot-chr80,CHR80-B150,,,,,,150ml - Big Shot,,,,,134.00,,,,,Y,290.00,,
+chrome-vodka-shot-chr80,CHR80-T25,,,,,,25ml - Tiny Shot,,,,,22.33,,,,,Y,60.00,,
+chrome-vodka-shot-chr80,CHR80-M75,,,,,,75ml - Medium Shot,,,,,67.00,,,,,Y,150.00,,
+class-cleaning-powder,CLA49,Class Cleaning Powder,General,,N,,,,,,,30.00,,,,Y,Y,65.00,0.000,
+coffee---black,COF33,Coffee - Black ☕️,Nonalc Drinks,,N,,,,,,,0.00,,,,N,Y,70.00,,
+coffee---white/maziwa,COF15,Coffee - White/Maziwa ☕️ 🥛,Nonalc Drinks,,N,,,,,,,0.00,,,,N,Y,180.00,,
+coke-2l,COK48,Coke 2L,Nonalc Drinks,,N,,,,,,,166.00,,,,Y,Y,380.00,2.000,1.000
+coke-300ml,COK81,"Coke, 300ml, Sugar",Nonalc Drinks,<p>glass bottle</p><p>+ sugar</p>,N,,,,,,,45.00,,,,Y,Y,120.00,12.000,5.000
+coke-350ml,COK42,"Coke, 350ml",Nonalc Drinks,<p>plastic bottle</p>,N,,,,,,,60.00,,,,N,Y,125.00,,
+"coke,-sugarless-300ml-⚠️bila-sukari",COK54,"Coke, Sugarless 300ml ⚠️bila sukari",Nonalc Drinks,<p>Glass Coke bottle bila sukari</p>,N,,,,,,,33.00,,,,Y,Y,100.00,5.000,4.000
+condom,CON69,Condom (Trust),General,<p>Trust</p>,N,,,,,,,42.00,,,,Y,Y,150.00,22.000,3.000
+cooking-oil---250ml,Coo2,Cooking Oil - 250ml,General,,N,,,,,,,0.00,,,,N,Y,80.00,,
+"crackers,-200g",CRA71,"Crackers, 200g",Snacks,,N,,,,,,,244.00,,,,Y,Y,290.00,0.000,
+"crackies,-120g",CRA74,"Crackies, 120g",Snacks,,N,,,,,,,0.00,,,,Y,Y,200.00,0.000,
+crisps---chili-&-lemon-flavor,CRI-CL100,Crisps - Chili & Lemon Flavor,Snacks,,N,Weight,100g,,,,,115.00,,,,Y,Y,170.00,1.000,
+crisps---chili-&-lemon-flavor,CRI-CL20,,,,,,20g,,,,,30.00,,,,,Y,65.00,0.000,
+crisps---salt-&-vinegar-flavour,CRI-SV100,Crisps - Salt & Vinegar Flavor,Snacks,,N,Weight,100g,,,,,115.00,,,,Y,Y,170.00,2.000,
+crisps---salt-&-vinegar-flavour,CRI-SV20,,,,,,20g,,,,,30.00,,,,,Y,65.00,-1.000,
+crisps---salted,CRI-S32,Crisps - Salted,Snacks,,N,Weight,100g,,,,,115.00,,,,Y,Y,170.00,1.000,
+crisps---salted,CRI-S33,,,,,,20g,,,,,30.00,,,,,Y,65.00,2.000,
+crisps,CRI90,Crisps - Tomato Flavor,Snacks,,N,Weight,100g,,,,,115.00,,,,Y,Y,170.00,0.000,
+crisps,CRI89,,,,,,50g,,,,,60.00,,,,,Y,90.00,0.000,
+cup,CUP64,"Cup, Takeaway 🥤",General,<p>paper material cup</p>,N,,,,,,,20.00,,,,N,Y,40.00,,
+"dates,-50g",DAT29,"Dates, 50g",Food,,N,,,,,,,50.00,,,,N,Y,70.00,,
+del-monte-juice,DEL12,"Del Monte Juice, 1L",Nonalc Drinks,<p>1L (sealed box)</p>,N,Flavor,Apple,,,,,259.00,,,,Y,Y,700.00,1.000,
+del-monte-juice,DEL35,,,,,,Mango,,,,,259.00,,,,,Y,750.00,2.000,1.000
+del-monte-juice,DEL90,,,,,,Pineapple,,,,,259.00,,,,,Y,750.00,3.000,1.000
+dental-flossers,DEN44,Dental Flossers,General,,N,,,,,,,3.75,,,,Y,Y,10.00,20.000,6.000
+dish-scrubber-cloth,DIS71,Dish Scrubber Cloth,General,,N,,,,,,,9.00,,,,Y,Y,750.00,1.000,
+double-switch,CIG49,Double Switch 🚬,Cigarettes,,N,,,,,,,23.50,,,,Y,Y,40.00,31.000,10.000
+drostdy-hof,DRO15,Drostdy Hof White Wine 750ml,Alcohol,,N,,,,,,,964.00,,,,Y,Y,2000.00,0.000,
+duchessalin-fragolino,DUC16,Duchessalin Fragolino,Alcohol,,N,,,,,,,1428.00,,,,Y,Y,3000.00,0.000,
+egg-(2)-boiled/fried,EGG14,Egg (2) Boiled/Fried 🍳,Food,,N,,,,,,,0.00,,,,N,Y,100.00,,
+egg,EGG06,Egg 🥚,Food,<p>Whole</p>,N,,,,,,,0.00,,,,N,Y,30.00,,
+embassy,CIG61,Embassy 🚬,Cigarettes,,N,,,,,,,23.50,6008165036227,,,Y,Y,35.00,39.000,9.000
+empty-300ml-glass-soda-bottle,EMPT66,Empty 300ml Glass Soda Bottle,General,,N,,,,,,,35.00,,,,N,Y,50.00,,
+"eno,-4.5g",ENO39,"Eno, 4.5g",Medical,,N,,,,,,,20.00,,,,Y,Y,30.00,7.000,4.000
+entire-property-rental-(per-night),SRV03,Entire Property Rental (per night) 🏠,Hospitality,,N,,,,,,,0.00,,,,N,Y,20000.00,,
+envelope-(used),ENV83,Envelope (Used),General,,N,,,,,,,5.00,,,,N,Y,10.00,,
+event-space-rental,EVE36,Event Space Rental,Hospitality,,N,,,,,,,0.00,,,,N,Y,variable,,
+fahari-(majani),FAH37,Fahari (Majani),General,,N,,,,,,,0.00,,,,Y,Y,20.00,7.000,
+fanta-orange/yellow,FAN35,"Fanta Orange, 300ml",Nonalc Drinks,<p>300ml glass bottle</p>,N,,,,,,,40.00,,,,Y,Y,100.00,4.000,4.000
+fanta-yellow-300ml,FAN92,"Fanta Yellow, 300ml",Nonalc Drinks,<p>300ml glass bottle</p>,N,,,,,,,40.00,,,,Y,Y,100.00,7.000,3.000
+"fayaz-choco-chip-cookies,-200g",FAY27,"Fayaz Choco Chip Cookies, 200g",Snacks,,N,,,,,,,185.00,,,,Y,Y,315.00,1.000,
+foreign-exchange-fee,FX-FEE,Foreign Exchange Fee,FX,,N,,,,,,,0.00,,,,N,Y,variable,,
+four-cousins-white-wine,FOU44,Four Cousins White Wine 750ml,Alcohol,,N,,,,,,,1200.00,,,,Y,Y,2350.00,1.000,
+geisha-bar-soap,GEI26,Geisha Bar Soap 🧼,General,,N,,,,,,,60.00,,,,Y,Y,110.00,7.000,
+giblets-gin-250ml,GIL25,Gilbeys Gin 250ml,Alcohol,,N,,,,,,,435.00,,,,Y,Y,650.00,2.000,
+gilbeys-gin-350ml,GIL18,Gilbeys Gin 350ml,Alcohol,,N,,,,,,,416.00,,,,Y,Y,790.00,0.000,
+gilbeys-gin-750ml,GIL17,Gilbeys Gin 750ml,Alcohol,,N,,,,,,,1240.00,,,,Y,Y,2070.00,1.000,
+gilbeys-gin-shot-gil17,GIL17-H125,Gilbeys Gin Shot,Shots,,N,Size,125ml - Half Quarter,,,,,206.67,,,,N,Y,370.00,,
+gilbeys-gin-shot-gil17,GIL17-B150,,,,,,150ml - Big Shot,,,,,248.00,,,,,Y,530.00,,
+gilbeys-gin-shot-gil17,GIL17-T25,,,,,,25ml - Tiny Shot,,,,,41.33,,,,,Y,110.00,,
+gilbeys-gin-shot-gil17,GIL17-M75,,,,,,75ml - Medium Shot,,,,,124.00,,,,,Y,280.00,,
+gillette-shaving-razor,GIL99,Gillette Shaving Razor,General,,N,,,,,,,60.00,,,,Y,Y,80.00,4.000,
+ginger-biscuit,GIN86,Ginger Biscuit,Snacks,,N,,,,,,,5.30,,,,Y,Y,15.00,44.000,15.000
+"glass,-drinking-300ml",GLASS,"Glass, Drinking 300ml",General,<p>drinking glass</p>,N,,,,,,,230.00,,,,Y,Y,300.00,7.000,3.000
+goal-creamy-biscuit,GOA74,Goal Creamy Biscuit,Snacks,,N,,,,,,,40.00,,,,Y,Y,85.00,5.000,1.000
+gomba,GOM64,Gomba,General,,N,,,,,,,2.00,,,,Y,Y,2.50,118.000,30.000
+guinness,GUI02,"Guinness, 500ml can",Alcohol,,N,,,,,,,217.00,,,,Y,Y,350.00,10.000,3.000
+hair-shampoo-and-conditioning-(miadi),HAS48,Hair Shampoo and Conditioning (Miadi),General,,N,,,,,,,567.00,,,,Y,Y,960.00,1.000,
+heineken,HEI09,"Heineken, 300ml bottled",Alcohol,,N,,,,,,,295.00,,,,Y,Y,435.00,3.000,
+"heineken,-can",HEI76,"Heineken, 500ml can",Alcohol,,N,,,,,,,295.00,,,,Y,Y,430.00,4.000,
+hennessy-vs,HEN10,Hennessy VS 700ml,Alcohol,,N,,,,,,,5700.00,,,,Y,Y,10500.00,1.000,
+"shower-gel,-hobby",FRESH38,"Hobby Shower Gel, 500ml",General,<ul><li>Fresh Care</li><li>Body Wash</li></ul>,N,,,,,,,420.00,,,,Y,Y,640.00,2.000,
+hunters-choice-gin-250ml,HUN25,Hunters Choice Whisky 250ml,Alcohol,,N,,,,,,,300.00,,,,Y,Y,520.00,5.000,2.000
+hunters-choice-gin-750ml,HUN60,Hunters Choice Whisky 750ml,Alcohol,,N,,,,,,,1100.00,,,,Y,Y,2250.00,2.000,
+hunters-choice-whisky-shot-hun60,HUN60-H125,Hunters Choice Whisky Shot,Shots,,N,Size,125ml - Half Quarter,,,,,183.33,,,,N,Y,330.00,,
+hunters-choice-whisky-shot-hun60,HUN60-B150,,,,,,150ml - Big Shot,,,,,220.00,,,,,Y,470.00,,
+hunters-choice-whisky-shot-hun60,HUN60-T25,,,,,,25ml - Tiny Shot,,,,,36.67,,,,,Y,90.00,,
+hunters-choice-whisky-shot-hun60,HUN60-M75,,,,,,75ml - Medium Shot,,,,,110.00,,,,,Y,250.00,,
+ibuprofen,IBU76,Ibuprofen,Medical,,N,,,,,,,6.00,,,,Y,Y,25.00,44.000,9.000
+imperial-bar-soap,IMP52,Imperial Bar Soap 🧼,General,,N,,,,,,,117.00,,,,Y,Y,160.00,0.000,
+body-wash,IMP25,Imperial Leather Body Wash,General,<p>Shower gel</p>,N,Size,250ml,,,,,375.00,,,,Y,Y,475.00,2.000,
+body-wash,IMP50,,,,,,500ml,,,,,595.00,,,,,Y,940.00,2.000,
+indomie,IND64,Indomie 🍜 70g,Food,,N,,,,,,,50.00,,,,Y,Y,75.00,-2.000,
+"jack-daniel's-whiskey,-350ml",JAC35,Jack Daniel's Whiskey 350ml,Alcohol,,N,,,,,,,2170.00,,,,Y,Y,3400.00,1.000,0.000
+"jagermeister,-700ml",JAG42,"Jagermeister, 700ml",Alcohol,,N,,,,,,,2515.00,,,,Y,Y,4650.00,2.000,1.000
+jameson-750ml,JAM91,Jameson 750ml,Alcohol,<p>Irish Whiskey</p>,N,,,,,,,3000.00,,,,Y,Y,6200.00,1.000,
+jameson-shot-jam91,JAM91-H125,Jameson Shot,Shots,,N,Size,125ml - Half Quarter,,,,,500.00,,,,N,Y,900.00,,
+jameson-shot-jam91,JAM91-B150,,,,,,150ml - Big Shot,,,,,600.00,,,,,Y,1290.00,,
+jameson-shot-jam91,JAM91-T25,,,,,,25ml - Tiny Shot,,,,,100.00,,,,,Y,260.00,,
+jameson-shot-jam91,JAM91-M75,,,,,,75ml - Medium Shot,,,,,300.00,,,,,Y,690.00,,
+jawbreaker-on-a-stick,JAW18,Jawbreaker on a Stick,General,,N,,,,,,,130.00,5011061160300,,,Y,Y,190.00,3.000,
+"jawbreaker,-ndogo-5-pack",JAW34,"Jawbreaker, ndogo 5-pack",General,,N,,,,,,,65.00,,,,Y,Y,90.00,0.000,
+johnnie-walker-red-375ml,JWR34,Johnnie Walker Red 375ml,Alcohol,,N,,,,,,,900.00,,,,Y,Y,1850.00,3.000,
+johnnie-walker-red-750ml,JWR75,Johnnie Walker Red 750ml,Alcohol,,N,,,,,,,1900.00,,,,Y,Y,3500.00,3.000,
+johnnie-walker-red-shot-jwr75,JWR75-H125,Johnnie Walker Red Shot,Shots,,N,Size,125ml - Half Quarter,,,,,316.67,,,,N,Y,570.00,,
+johnnie-walker-red-shot-jwr75,JWR75-B150,,,,,,150ml - Big Shot,,,,,380.00,,,,,Y,810.00,,
+johnnie-walker-red-shot-jwr75,JWR75-T25,,,,,,25ml - Tiny Shot,,,,,63.33,,,,,Y,160.00,,
+johnnie-walker-red-shot-jwr75,JWR75-M75,,,,,,75ml - Medium Shot,,,,,190.00,,,,,Y,430.00,,
+juice,JUI86,Juice 🍹,Nonalc Drinks,<p>Glass of</p>,N,,,,,,,17.00,,,,N,Y,250.00,,
+kachumbari,KAC35,Kachumbari,Food,,N,,,,,,,0.00,,,,N,Y,80.00,,
+kaluma,KAL56,Kaluma Pain Balm,Medical,,N,,,,,,,20.00,,,,N,Y,35.00,,
+kenya-cane-coconut-250ml,KEN31,Kenya Cane Coconut 250ml 🥥,Alcohol,,N,,,,,,,170.00,,,,Y,Y,250.00,0.000,
+kenya-cane-coconut-750ml,KEN11,Kenya Cane Coconut 750ml 🥥,Alcohol,,N,,,,,,,700.00,,,,Y,Y,1000.00,0.000,
+kenya-cane-coconut-shot-ken11,KEN11-H125,Kenya Cane Coconut 🥥 Shot,Shots,,N,Size,125ml - Half Quarter,,,,,116.67,,,,N,Y,210.00,,
+kenya-cane-coconut-shot-ken11,KEN11-B150,,,,,,150ml - Big Shot,,,,,140.00,,,,,Y,300.00,,
+kenya-cane-coconut-shot-ken11,KEN11-T25,,,,,,25ml - Tiny Shot,,,,,23.33,,,,,Y,60.00,,
+kenya-cane-coconut-shot-ken11,KEN11-M75,,,,,,75ml - Medium Shot,,,,,70.00,,,,,Y,160.00,,
+kenya-cane-lemon-&-ginger-250ml,KEN36,Kenya Cane Lemon & Ginger 250ml 🍋 🫚,Alcohol,<p>KC LEMON AND GINGER 250ML&nbsp;</p>,N,,,,,,,268.00,,,,Y,Y,410.00,12.000,5.000
+kenya-cane-lemon-&-ginger-750ml,KEN35,Kenya Cane Lemon & Ginger 750ml 🍋🫚,Alcohol,<p>KC Lemon and Ginger 750ml&nbsp;</p>,N,,,,,,,700.00,,,,Y,Y,1310.00,3.000,1.000
+kenya-cane-lemon-ginger-shot-ken35,KEN35-H125,Kenya Cane Lemon & Ginger 🍋🫚 Shot,Shots,,N,Size,125ml - Half Quarter,,,,,116.67,,,,N,Y,210.00,,
+kenya-cane-lemon-ginger-shot-ken35,KEN35-B150,,,,,,150ml - Big Shot,,,,,140.00,,,,,Y,300.00,,
+kenya-cane-lemon-ginger-shot-ken35,KEN35-T25,,,,,,25ml - Tiny Shot,,,,,23.33,,,,,Y,60.00,,
+kenya-cane-lemon-ginger-shot-ken35,KEN35-M75,,,,,,75ml - Medium Shot,,,,,70.00,,,,,Y,160.00,,
+kenya-cane-pineapple-fusion-250ml,KEN30,Kenya Cane Pineapple Fusion 250ml 🍍,Alcohol,<p>KC Pineapple 250ml</p>,N,,,,,,,268.00,,,,Y,Y,430.00,14.000,5.000
+kenya-cane-pineapple-fusion-750ml,KEN12,Kenya Cane Pineapple Fusion 750ml 🍍,Alcohol,,N,,,,,,,700.00,,,,Y,Y,1500.00,2.000,
+kenya-cane-pineapple-fusion-shot-ken12,KEN12-H125,Kenya Cane Pineapple Fusion 🍍 Shot,Shots,,N,Size,125ml - Half Quarter,,,,,116.67,,,,N,Y,210.00,,
+kenya-cane-pineapple-fusion-shot-ken12,KEN12-B150,,,,,,150ml - Big Shot,,,,,140.00,,,,,Y,300.00,,
+kenya-cane-pineapple-fusion-shot-ken12,KEN12-T25,,,,,,25ml - Tiny Shot,,,,,23.33,,,,,Y,60.00,,
+kenya-cane-pineapple-fusion-shot-ken12,KEN12-M75,,,,,,75ml - Medium Shot,,,,,70.00,,,,,Y,160.00,,
+kenya-cane-smooth-250ml,KEN01,Kenya Cane Smooth 250ml,Alcohol,,N,,,,,,,250.00,,,,Y,Y,410.00,6.000,3.000
+kenya-cane-smooth-750ml,KEN19,Kenya Cane Smooth 750ml,Alcohol,,N,,,,,,,700.00,,,,Y,Y,1280.00,3.000,1.000
+kenya-cane-smooth-shot-ken19,KEN19-H125,Kenya Cane Smooth Shot,Shots,,N,Size,125ml - Half Quarter,,,,,116.67,,,,N,Y,210.00,,
+kenya-cane-smooth-shot-ken19,KEN19-B150,,,,,,150ml - Big Shot,,,,,140.00,,,,,Y,300.00,,
+kenya-cane-smooth-shot-ken19,KEN19-T25,,,,,,25ml - Tiny Shot,,,,,23.33,,,,,Y,60.00,,
+kenya-cane-smooth-shot-ken19,KEN19-M75,,,,,,75ml - Medium Shot,,,,,70.00,,,,,Y,160.00,,
+kibiriti-(matchbox),KIB61,Kiberiti (Matchbox),General,,N,,,,,,,3.50,,,,Y,Y,10.00,77.000,9.000
+"tank-dispensed-water,-kikombe-ya-maji",MAJ03,Kikombe ya maji,Maji,<p>cup of water</p>,N,,,,,,,0.00,,,,N,Y,10.00,,
+kotex-woman-pad,KOT34,Kotex Woman Pad,General,,N,,,,,,,28.00,,,,N,Y,65.00,,
+krest,KRE11,"Krest, 300ml",Nonalc Drinks,<p>300ml glass bottle</p>,N,,,,,,,40.00,,,,Y,Y,105.00,7.000,3.000
+kudos-corn-puffs,KUD46,Kudos Corn Puffs,Snacks,,N,,,,,,,12.00,,,,Y,Y,30.00,8.000,2.000
+kuku-–-half,KUK25,Kuku – Half 🐔,Food,<p>Chicken</p>,N,,,,,,,0.00,,,,N,Y,600.00,,
+kuku-–-kifua,KUK24,Kuku – Kifua 🐔,Food,<p>Chicken</p>,N,,,,,,,0.00,,,,N,Y,350.00,,
+kuku-–-mgu,KUK23,Kuku – Mgu 🐔,Food,<p>Chicken</p>,N,,,,,,,0.00,,,,N,Y,300.00,,
+kuku-–-whole-🐔,KUKU-100,Kuku – Whole 🐔,Food,,N,,,,,,,550.00,,,,N,Y,1200.00,,
+kwal-county-250ml,KWA20,Kwal County 250ml,Alcohol,,N,,,,,,,240.00,,,,Y,Y,375.00,5.000,3.000
+kwal-county-750ml,KWA10,Kwal County 750ml,Alcohol,,N,,,,,,,693.00,,,,Y,Y,1090.00,2.000,
+kwal-county-shot-kwa10,KWA10-H125,Kwal County Shot,Shots,,N,Size,125ml - Half Quarter,,,,,115.50,,,,N,Y,210.00,,
+kwal-county-shot-kwa10,KWA10-B150,,,,,,150ml - Big Shot,,,,,138.60,,,,,Y,300.00,,
+kwal-county-shot-kwa10,KWA10-T25,,,,,,25ml - Tiny Shot,,,,,23.10,,,,,Y,60.00,,
+kwal-county-shot-kwa10,KWA10-M75,,,,,,75ml - Medium Shot,,,,,69.30,,,,,Y,160.00,,
+laundry,SRV08,Laundry,Services,,N,,,,,,,0.00,,,,N,Y,variable,,
+lemon-tea-🍵-🍋,LEMT778,Lemon Tea 🍵 🍋,Nonalc Drinks,,N,,,,,,,20.00,,,,N,Y,70.00,,
+lemon-🍋,LEM92,Lemon 🍋,Food,,N,,,,,,,10.00,,,,N,Y,25.00,,
+lemonade-lime,LEM34,Lemonade Lime,Nonalc Drinks,,N,,,,,,,40.00,,,,Y,Y,80.00,0.000,
+lighter,LIG62,Lighter,General,,N,,,,,,,0.00,,,,Y,Y,80.00,0.000,
+lollipop,LOL32,Lollipop 🍭 (King Kuba),General,,N,Flavor,Black Cherry,,,,,9.40,,,,Y,Y,25.00,46.000,
+lollipop,LOL64,,,,,,Cherry,,,,,9.40,,,,,Y,30.00,3.000,
+mafuta-ya-nazi,MAF54,Mafuta Ya Nazi,General,,N,,,,,,,40.00,,,,Y,Y,80.00,20.000,
+mahamri,MAH60,Mahamri,Food,,N,,,,,,,0.00,,,,N,Y,60.00,,
+maji---tank-dispensed,10000,Maji - Tank Dispensed,Maji,<p>water</p>,Y,Volume,1.5L,,,,,0.00,,,,N,Y,20.00,,
+maji---tank-dispensed,10002,,,,,,10L,,,,,0.00,,,,,Y,55.00,,
+maji---tank-dispensed,10003,,,,,,20L,,,,,0.00,,,,,Y,80.00,,
+maji---tank-dispensed,MAJ-DISP-2L,,,,,,2L,,,,,0.00,,,,,Y,25.00,,
+maji---tank-dispensed,10001,,,,,,5L,,,,,0.00,,,,,Y,40.00,,
+mandazi,MAN44,Mandazi,Food,,N,,,,,,,0.00,,,,N,Y,20.00,,
+mango,MANGO,Mango,Food,,N,,,,,,,0.00,,,,N,Y,100.00,,
+"manji-chocolate-cream-biscuit,-78g",MAN54,"Manji Chocolate Cream Biscuit, 78g",Snacks,,N,,,,,,,48.00,,,,Y,Y,80.00,0.000,
+mara-moja,MAR30,Mara Moja,Medical,,N,,,,,,,8.00,,,,Y,Y,15.00,144.000,
+mashed-potatoes,MAS52,Mashed Potatoes,Food,,N,,,,,,,60.00,,,,N,Y,190.00,,
+massage-room-rental,MAS93,Massage Room Rental,Hospitality,,N,,,,,,,0.00,,,,N,Y,variable,,
+milk-500ml,MAZ07,Maziwa/Milk 500ml,Nonalc Drinks,<p>maziwa</p>,N,,,,,,,52.00,,,,N,Y,150.00,,
+mchicha,MCH22,Mchicha,Food,,N,,,,,,,0.00,,,,N,Y,80.00,,
+"minidress,-sequin,-side-laced,-purple",FAS63,"Minidress, sequin, side laced, purple",Fashion,,N,,,,,,,0.00,,,,Y,Y,1500.00,1.000,
+mosquito-coil,MOS68,Mosquito Coil,General,,N,,,,,,,0.00,,,,N,Y,20.00,,
+mpesa-cash-in,CASH-IN,MPESA Cash In 📥,Float Services,,N,,,,,,,0.00,,,,N,Y,variable,,
+mpesa-cash-out,MPESA,MPESA Cash Out 📤,Float Services,,N,,,,,,,0.00,,,,N,Y,variable,,
+msafi-soap,MSA56,Msafi Soap,General,,N,,,,,,,30.00,,,,N,Y,80.00,,
+"nala,-70g-instant-noodles",NAL25,"Nala, 70g 🍜",Food,<p>Instant Noodles</p>,N,,,,,,,40.00,,,,Y,Y,80.00,8.000,6.000
+nescafe,NES43,Nescafe,General,,N,,,,,,,0.00,,,,Y,Y,20.00,0.000,
+nexaplast-bandage,NEX39,Nexaplast Elastic Bandage,Medical,,N,,,,,,,5.00,,,,N,Y,15.00,,
+"nivea-radiance-shea-lotion,-400ml",NIV37,"Nivea Radiance Shea Lotion, 400ml",General,,N,,,,,,,585.00,,,,Y,Y,785.00,1.000,
+"nivea-radiant-&-beauty-lotion,-400ml",NIV92,"Nivea Radiant & Beauty Lotion, 400ml",General,,N,,,,,,,730.00,,,,N,Y,890.00,,
+njugu,NJUGU,Njugu,Food,,N,,,,,,,0.00,,,,N,Y,20.00,,
+"nuvita-sponge-cake,-chocolate",NUV93,"Nuvita Sponge Cake, Chocolate",Snacks,,N,,,,,,,55.00,,,,Y,Y,95.00,5.000,
+o,O15,O,Cigarettes,,N,,,,,,,12.00,,,,Y,Y,15.00,28.000,
+olepasu-cioccolata-red-wine,OCR18,Olepasu Cioccolata Red Wine 750ml,Alcohol,,N,,,,,,,1500.00,,,,Y,Y,2800.00,0.000,
+omelette,OME41,Omelette,Food,,N,,,,,,,0.00,,,,N,Y,200.00,,
+"omo,-100g",OMO10,"Omo, 100g",General,,N,,,,,,,142.00,,,,N,Y,255.00,,
+onion,ONION,Onion,Food,<p>kitungu</p>,N,,,,,,,0.00,,,,N,Y,20.00,,
+pack-of-5-razors,RAZOR,Pack of 5 razors,General,,N,,,,,,,65.00,,,,Y,N,105.00,6.000,
+panadol,PAN50,Panadol Extra,Medical,,N,,,,,,,15.00,,,,Y,Y,25.00,15.000,9.000
+pancake,PAN29,Pancake,Food,,N,,,,,,,0.00,,,,N,Y,100.00,,
+paper-bag,PAP58,Paper Bag,General,,N,,,,,,,2.50,,,,N,Y,5.00,,
+peanuts,PEA63,Peanuts,Snacks,,N,,,,,,,0.00,,,,N,Y,30.00,,
+pen,PEN82,Pen,General,,N,,,,,,,0.00,,,,N,Y,25.00,,
+pencil,PEN79,Pencil,General,,N,,,,,,,30.00,,,,N,Y,45.00,,
+personalized-guest-service,SRV25,Personalized Guest Service,Services,,N,,,,,,,0.00,,,,N,Y,variable,,
+photography,PHO70,Photography,Services,,N,,,,,,,0.00,,,,N,Y,variable,,
+pilau,PILAU,Pilau,Food,,N,,,,,,,0.00,,,,N,Y,300.00,,
+pili-pili,PIL67,Pili pili,General,,N,,,,,,,1.50,,,,N,Y,2.50,,
+pilsner-can-500ml,PIL82,"Pilsner Lager, 500ml can",Alcohol,,N,,,,,,,199.00,,,,Y,Y,350.00,9.000,3.000
+pk-blue,PKB77,PK Blue 🟦,General,,N,,,,,,,5.00,,,,Y,Y,10.00,54.000,15.000
+pk-green,PKG55,PK Green 🟩,General,,N,,,,,,,5.00,,,,Y,Y,10.00,77.000,
+pk-yellow,PKY66,PK Yellow 🟨,General,,N,,,,,,,5.00,,,,Y,Y,10.00,-44.000,
+plastic-spoon,PLA28,Plastic Spoon,General,,N,,,,,,,2.00,,,,N,Y,10.00,,
+playing-cards,PLA32,Playing Cards,General,,N,,,,,,,150.00,,,,Y,Y,205.00,2.000,1.000
+"popcorn,-30g",POP99,"Popcorn, 30g",Snacks,,N,,,,,,,45.00,,,,Y,Y,15.00,3.000,
+porridge,POR18,Porridge,Food,,N,,,,,,,0.00,,,,N,Y,100.00,,
+predator-energy-drink,PRE22,Predator Energy Drink,Nonalc Drinks,,N,,,,,,,67.00,,,,Y,Y,110.00,12.000,2.000
+private-show,SRV01,Private Show,Services,,N,,,,,,,0.00,,,,N,Y,variable,,
+cake---muffin,QCAK82,Queen Cake,Snacks,,N,,,,,,,16.00,,,,Y,Y,25.00,16.000,4.000
+queen-cakes,QUE83,Queen Cakes,Food,,N,,,,,,,16.86,,,,Y,Y,30.00,21.000,4.000
+razor,RAZ01,Razor,General,,N,,,,,,,12.00,5013405654216,,,Y,Y,20.00,4.000,
+red-bull,RED33,Red Bull,Nonalc Drinks,,N,,,,,,,174.00,,,,Y,Y,250.00,4.000,3.000
+rice,RICE,Rice,Food,,N,,,,,,,0.00,,,,N,Y,200.00,,
+ring-light,RIN58,Ring Light,General,,N,,,,,,,7500.00,,,,Y,Y,9350.00,1.000,
+rizzla-brown-paper-(per-1),RIZ34,Rizzla Brown Paper (per 1),Cigarettes,,N,,,,,,,0.00,,,,Y,Y,5.00,353.000,
+rizzla-white-paper-(per-3),RIZ70,Rizzla White Paper (per 3),Cigarettes,,N,,,,,,,0.00,,,,Y,Y,5.00,245.000,
+robertson-natural-sweet-red-wine-750ml,ROB28,Robertson Natural Sweet Red Wine 750ml,Alcohol,,N,,,,,,,1400.00,,,,Y,Y,2400.00,1.000,
+room-rental-(per-night),SRV02,Room Rental (per night),Hospitality,,N,,,,,,,0.00,,,,N,Y,12000.00,,
+rooster,CIG23,Rooster 🚬,Cigarettes,,N,,,,,,,13.00,6008165036302,,,Y,Y,15.00,30.000,15.000
+rosso-nobile-red-wine,RNR63,Rosso Nobile Red Wine 750ml,Alcohol,,N,,,,,,,1500.00,,,,Y,Y,3000.00,2.000,
+royco,ROY29,Royco Cube,Food,,N,,,,,,,0.00,,,,N,Y,5.00,,
+safari-king,CIG01,Safari King 🚬,Cigarettes,,N,,,,,,,13.00,,,,Y,Y,20.00,53.000,30.000
+safari-menthol,CIG11,Safari Menthol 🚬,Cigarettes,,N,,,,,,,13.00,6008103007890,,,Y,Y,15.00,36.000,10.000
+safaricom-airtime,SAF26,Safaricom Airtime,General,,N,,,,,,,1.00,,,,Y,Y,1.00,800.000,
+salt-20g,SAL72,Salt 20g,General,,Y,,,,,,,10.00,,,,N,Y,20.00,,
+"salt,-5g",SAL30,"Salt, 5g",General,,N,,,,,,,0.00,,,,Y,Y,20.00,30.000,
+samaki-deep-fry,SAM27,Samaki Deep Fry,Food,,N,,,,,,,0.00,,,,N,Y,600.00,,
+samaki-wet-fry,SAM26,Samaki Wet Fry,Food,,N,,,,,,,0.00,,,,N,Y,610.00,,
+samaki-ya-nazi,SAM28,Samaki ya Nazi,Food,,N,,,,,,,0.00,,,,N,Y,800.00,,
+sausage,SAU55,Sausage,Food,,N,,,,,,,0.00,,,,N,Y,150.00,,
+savanna-cider-330ml-bottle,SAV97,"Savanna Cider 330ml, Bottled",Alcohol,,N,,,,,,,230.00,,,,Y,Y,335.00,6.000,3.000
+schweppes-novida,SCH43,"Schweppes Novida, 300ml",Nonalc Drinks,,N,,,,,,,40.00,,,,Y,Y,100.00,3.000,2.000
+scissors,SCI22,Scissors,General,,N,,,,,,,235.00,,,,Y,Y,305.00,1.000,
+scrambled-eggs,SCR82,Scrambled Eggs,Food,,N,,,,,,,40.00,,,,N,Y,200.00,,
+seashell,SEA99,Seashell,General,,N,Size,Large,,,,,600.00,,,,Y,Y,4500.00,3.000,
+seashell,SEA13,,,,,,Small,,,,,200.00,,,,,Y,800.00,2.000,
+serviette-pack,SER59,"Serviette, 100/Pack (Velvex)",General,,N,,,,,,,140.00,,,,N,Y,210.00,,
+shaving-razors-(gillette),SHA74,Shaving Razors (Gillette),General,,N,,,,,,,0.00,,,,Y,Y,350.00,0.000,
+shower,SRV05,Shower,Services,,N,,,,,,,0.00,,,,N,Y,150.00,,
+shower-cap,SHO87,Shower Cap,General,,N,,,,,,,150.00,,,,N,Y,190.00,,
+single-switch,CIG82,Single Switch 🚬,Cigarettes,,N,,,,,,,0.00,,,,Y,Y,35.00,75.000,
+skittles,SKI83,Skittles,General,,N,,,,,,,110.00,,,,Y,Y,180.00,3.000,
+smirnoff-ice-black,SMI08,Smirnoff Black Ice 330ml Can,Alcohol,,N,,,,,,,176.00,,,,Y,N,300.00,5.000,2.000
+guaranna-(blue-&-white-can),GUA29,Smirnoff Ice Guaranna 330ml,Alcohol,,N,,,,,,,230.00,,,,Y,Y,335.00,4.000,3.000
+smirnoff-ice-pineapple-punch,SMI66,Smirnoff Ice Pineapple Punch,Alcohol,,N,,,,,,,300.00,,,,Y,Y,430.00,0.000,
+smirnoff-vodka-no.21-250ml,SMI60,Smirnoff Vodka No.21 250ml,Alcohol,,N,,,,,,,456.00,,,,Y,Y,710.00,1.000,
+smoothie,SMO74,Smoothie,Nonalc Drinks,,N,,,,,,,0.00,,,,N,Y,210.00,,
+snapp,SNA95,"Snapp, Apple Flavor 330ml",Alcohol,,N,,,,,,,176.00,,,,Y,Y,310.00,9.000,3.000
+softcare-pad,SOF51,Softcare Pad,General,,N,,,,,,,65.00,,,,Y,Y,110.00,9.000,
+spaghetti,SPG17,Spaghetti,Food,,N,,,,,,,0.00,,,,N,Y,200.00,,
+steak-platter-special,STE99,Special Steak Platter,Food,,N,,,,,,,0.00,,,,N,Y,variable,,
+spinach,SPI38,Spinach,Food,,N,,,,,,,0.00,,,,N,Y,100.00,,
+sportsman,CIG37,Sportsman (Rothmans)🚬,Cigarettes,,N,,,,,,,23.50,6008165036296,,,Y,Y,30.00,9.000,8.000
+"sprite,-1l",SPR19,"Sprite, 1L",Nonalc Drinks,,N,,,,,,,100.00,,,,Y,Y,205.00,0.000,
+"sprite,-2l",SPR74,"Sprite, 2L",Nonalc Drinks,,N,,,,,,,200.00,,,,Y,Y,360.00,2.000,1.000
+sprite,SPR22,"Sprite, 300ml",Nonalc Drinks,<p>300ml glass bottle</p>,N,,,,,,,40.00,,,,Y,Y,110.00,6.000,4.000
+steel-wool,STE43,Steel Wool,General,<p>Steel Wire</p>,N,,,,,,,9.00,,,,N,Y,15.00,,
+stoney,STO33,"Stoney, 300ml",Nonalc Drinks,<p>300ml glass bottle</p>,N,,,,,,,33.00,,,,Y,Y,100.00,5.000,3.000
+straw,STRAW,Straw,General,,N,,,,,,,1.20,,,,Y,Y,2.50,92.000,16.000
+strepsils,STR36,Strepsils,Medical,,N,,,,,,,10.00,,,,Y,Y,25.00,32.000,
+sugar-(per-gram),SUG25,Sugar (per gram),General,,Y,,,,,,,0.00,,,,N,Y,2.50,,
+sugar-sachet,SUG09,Sugar Sachet,General,,N,,,,,,,0.00,,,,N,Y,20.00,,
+sunlight-soap,SUN10,Sunlight Soap,General,,N,,,,,,,30.00,,,,Y,Y,65.00,1.000,
+"sunset-strawberry-wafer-cubes,-125g",WAF78,"Sunveat Strawberry Wafer Cubes, 125g",Snacks,,N,,,,,,,149.00,,,,Y,Y,235.00,1.000,
+swahili-cooking-class,SRV06,Swahili Cooking Class,Services,,N,,,,,,,0.00,,,,N,Y,variable,,
+sweet-potato,SWE43,Sweet Potato,Food,,N,,,,,,,40.00,,,,N,Y,130.00,,
+sweets,SWE37,Sweets,General,,N,,,,,,,2.00,,,,Y,Y,2.50,1620.000,
+tampon,TAM52,"Tampon, Kotex",General,<p>Kotex</p>,N,,,,,,,28.00,,,,N,Y,50.00,,
+tea---black,TEA13,Tea - Black,Nonalc Drinks,<p>chai</p>,N,,,,,,,0.00,,,,N,Y,50.00,,
+tea---milk/maziwa,TEA99,Tea - Milk/Maziwa,Nonalc Drinks,<p>chai</p>,N,,,,,,,0.00,,,,N,Y,150.00,,
+toilet,SRV07,Toilet,Services,,N,,,,,,,0.00,,,,N,Y,50.00,,
+toilet-paper,TOI63,Toilet Tissue,General,<ul><li>Toilet Paper</li></ul>,N,,,,,,,36.00,,,,N,Y,55.00,,
+tomato,TOM80,Tomato,Food,,N,,,,,,,0.00,,,,N,Y,20.00,,
+takeaway-tomato-sauce,TAK90,Tomato Sauce Packet,Food,<p>Takeaway tomato sauce</p>,N,,,,,,,15.00,,,,Y,Y,20.00,10.000,3.000
+toothbrush,TOO68,Toothbrush 🪥,General,,N,,,,,,,0.00,,,,Y,Y,60.00,5.000,
+toothpaste,TOO67,Toothpaste,General,<p>Colgate</p>,N,,,,,,,79.00,,,,Y,Y,130.00,8.000,4.000
+toothpicks,TOO70,Toothpicks,General,,N,,,,,,,0.00,,,,N,Y,130.00,,
+"drum,-small-🥁",DRU76,"Traditional Drum, Small 🥁",General,,N,,,,,,,0.00,,,,Y,Y,1400.00,3.000,
+"drum,-large-🥁",DRU93,"Traditional Drum, Tall 🥁",General,,N,,,,,,,0.00,,,,Y,Y,1700.00,1.000,
+bag/secure-storage-&-transaction-fee,TF-0,"Transaction Fee, Courier",Transportation,,N,,,,,,,0.00,,,,N,Y,variable,,
+treatos-choco-chip-cookies-100g,TRE28,Treatos Choco Chip Cookies 100g,Snacks,,N,,,,,,,145.00,,,,Y,Y,210.00,3.000,1.000
+tropical-mint-candy,TRO53,Tropical Mint Candy,General,,N,,,,,,,2.00,,,,Y,Y,5.00,69.000,
+tusker-cider,TUS37,"Tusker Cider, 500ml can",Alcohol,,N,,,,,,,234.00,,,,Y,Y,350.00,7.000,3.000
+tusker-lager,TUS06,Tusker Lager 500ml can,Alcohol,,N,,,,,,,199.00,,,,Y,Y,335.00,13.000,5.000
+tusker-light,TUS46,Tusker Lite 500ml can,Alcohol,,N,,,,,,,270.00,,,,Y,Y,395.00,5.000,3.000
+tusker-malt-300ml-btl,TUS05,"Tusker Malt 300ml, bottle",Alcohol,<p>bottle</p>,N,,,,,,,250.00,,,,Y,Y,365.00,0.000,
+"tusker-malt,-can",TUS84,"Tusker Malt Lager, 500ml can",Alcohol,,N,,,,,,,252.00,,,,Y,Y,375.00,5.000,2.000
+ugali,UGALI,Ugali,Food,,N,,,,,,,0.00,,,,N,Y,120.00,,
+umbrella,UMB43,Umbrella,General,,N,,,,,,,600.00,,,,Y,Y,980.00,1.000,
+"unga-ugali,-1kg",UNG83,"Unga Ugali, 1kg",Food,,Y,,,,,,,0.00,,,,N,Y,120.00,,
+urban-bites,URB54,Urban Bites,Snacks,,N,,,,,,,90.00,,,,Y,Y,110.00,1.000,
+urban-stix,URB17,Urban Stix,Snacks,,N,,,,,,,37.00,,,,Y,Y,80.00,3.000,1.000
+v-&-a-imperial-cream-fine-liqueur-250ml,VAI24,V & A Imperial Cream Fine Liqueur 250ml,Alcohol,,N,,,,,,,300.00,,,,Y,Y,480.00,0.000,
+v&a-imperial-cream-fine-liqueur-750ml,VAI32,V&A Imperial Cream Fine Liqueur 750ml,Alcohol,,N,,,,,,,768.00,,,,Y,Y,1750.00,1.000,
+va-imperial-cream-fine-liqueur-shot-vai32,VAI32-H125,V&A Imperial Cream Fine Liqueur Shot,Shots,,N,Size,125ml - Half Quarter,,,,,128.00,,,,N,Y,230.00,,
+va-imperial-cream-fine-liqueur-shot-vai32,VAI32-B150,,,,,,150ml - Big Shot,,,,,153.60,,,,,Y,330.00,,
+va-imperial-cream-fine-liqueur-shot-vai32,VAI32-T25,,,,,,25ml - Tiny Shot,,,,,25.60,,,,,Y,70.00,,
+va-imperial-cream-fine-liqueur-shot-vai32,VAI32-M75,,,,,,75ml - Medium Shot,,,,,76.80,,,,,Y,180.00,,
+viazi-karai,VIAZK12,Viazi Karai,Food,,N,Size,12 piece,,,,,30.00,,,,N,Y,90.00,,
+viazi-karai,VIAZK04,,,,,,4 piece,,,,,10.00,,,,,Y,30.00,,
+viceroy-250ml,VIC25,Viceroy 250ml,Alcohol,,N,,,,,,,600.00,,,,Y,Y,1100.00,3.000,1.000
+viceroy-750ml,VIC13,Viceroy 750ml,Alcohol,,N,,,,,,,1278.00,,,,Y,Y,2400.00,2.000,
+viceroy-shot-vic13,VIC13-H125,Viceroy Shot,Shots,,N,Size,125ml - Half Quarter,,,,,213.00,,,,N,Y,380.00,,
+viceroy-shot-vic13,VIC13-B150,,,,,,150ml - Big Shot,,,,,255.60,,,,,Y,550.00,,
+viceroy-shot-vic13,VIC13-T25,,,,,,25ml - Tiny Shot,,,,,42.60,,,,,Y,110.00,,
+viceroy-shot-vic13,VIC13-M75,,,,,,75ml - Medium Shot,,,,,127.80,,,,,Y,290.00,,
+weetabix,WEE30,Weetabix,Food,,N,Serving Size,30g/serving,,,,,33.30,,,,Y,Y,60.00,15.000,
+weetabix,WEE45,,,,,,450g Factory Sealed,,,,,499.00,,,,,Y,900.00,1.000,
+white-cap,WHI07,"White Cap, 500ml can",Alcohol,,N,,,,,,,250.00,,,,Y,Y,365.00,9.000,3.000
+wifi-🌐-(4-hours),WIFI-04,Wifi Access 🌐,Services,<p>Pink Tamu Guest: PT0765967243</p>,N,,,,,,,0.00,,,,N,Y,40.00,,
+yogurt,YOG61,"Yogurt, 450g (Delamere)",Food,,N,,,,,,,160.00,,,,Y,Y,260.00,3.000,
+zycet-(allergy-med),ZYC83,Zycet (Allergy Med),Medical,,N,,,,,,,10.00,,,,Y,Y,25.00,27.000,
+glass-of-4th-street-red-wine-150ml-4sr24-g150,4SR24-G150,🍷 Glass of 4th Street Red Wine - 150ml,Glass of Wine,,N,,,,,,,240.00,,,,N,Y,405.00,,
+glass-of-bianco-nobile-white-wine-150ml-bia97-g150,BIA97-G150,🍷 Glass of Bianco Nobile White Wine - 150ml,Glass of Wine,,N,,,,,,,240.00,,,,N,Y,415.00,,
+glass-of-four-cousins-white-wine-150ml-fou44-g150,FOU44-G150,🍷 Glass of Four Cousins White Wine - 150ml,Glass of Wine,,N,,,,,,,240.00,,,,N,Y,405.00,,
+glass-of-olepasu-cioccolata-red-wine-150ml-ocr18-g150,OCR18-G150,🍷 Glass of Olepasu Cioccolata Red Wine - 150ml,Glass of Wine,,N,,,,,,,300.00,,,,N,Y,450.00,,
+glass-of-robertson-natural-sweet-red-wine-150ml-rob28-g150,ROB28-G150,🍷 Glass of Robertson Natural Sweet Red Wine - 150ml,Glass of Wine,,N,,,,,,,280.00,,,,N,Y,460.00,,
+glass-of-rosso-nobile-red-wine-150ml-rnr63-g150,RNR63-G150,🍷 Glass of Rosso Nobile Red Wine - 150ml,Glass of Wine,,N,,,,,,,300.00,,,,N,Y,455.00,,
