@@ -13,6 +13,7 @@ from __future__ import annotations
 import csv
 import json
 import os
+import sys
 import time
 from collections import defaultdict
 from datetime import datetime
@@ -170,6 +171,7 @@ def format_money(value: Any) -> str:
 
 def build_alert_block(rows: Iterable[dict[str, Any]]) -> str:
     grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    checked_count = 0
     for row in rows:
         if not row.get("item_name"):
             continue
@@ -183,9 +185,14 @@ def build_alert_block(rows: Iterable[dict[str, Any]]) -> str:
         threshold = row.get("threshold")
         if threshold is None:
             continue
+        checked_count += 1
         if qty <= threshold:
             grouped[str(row.get("category") or "Uncategorized")].append(row)
+            print(f"[DEBUG] Low stock: {row.get('item_name')} qty={qty} threshold={threshold}", file=sys.stderr)
+        else:
+            print(f"[DEBUG] OK: {row.get('item_name')} qty={qty} threshold={threshold}", file=sys.stderr)
 
+    print(f"[DEBUG] Checked {checked_count} items, found {sum(len(v) for v in grouped.values())} low stock", file=sys.stderr)
     if not grouped:
         return "No low stock items at this time."
 
@@ -345,6 +352,7 @@ def fetch_loyverse_items(api_token: str, base_url: str = "https://api.loyverse.c
 
 def merge_api_rows_with_thresholds(api_rows: Iterable[dict[str, Any]], csv_path: str | os.PathLike[str] | None = None) -> list[dict[str, Any]]:
     threshold_map = threshold_lookup_from_csv(csv_path) if csv_path else {}
+    print(f"[DEBUG] Loaded {len(threshold_map)} thresholds from CSV", file=sys.stderr)
     merged: list[dict[str, Any]] = []
     for row in api_rows:
         name = normalize_name(row.get("item_name"))
@@ -359,6 +367,7 @@ def merge_api_rows_with_thresholds(api_rows: Iterable[dict[str, Any]], csv_path:
         candidate = dict(row)
         candidate["threshold"] = threshold
         merged.append(candidate)
+        print(f"[DEBUG] Merged {name} with threshold {threshold}", file=sys.stderr)
     return merged
 
 
@@ -366,9 +375,14 @@ def select_eligible_low_stock_items(csv_path: str | os.PathLike[str] | None = No
     if api_token:
         rows = fetch_loyverse_items(api_token, base_url or "https://api.loyverse.com/v1.0")
         if rows:
-            return merge_api_rows_with_thresholds(rows, csv_path)
+            print(f"[DEBUG] Fetched {len(rows)} items from Loyverse API", file=sys.stderr)
+            merged = merge_api_rows_with_thresholds(rows, csv_path)
+            print(f"[DEBUG] {len(merged)} items have thresholds after merge", file=sys.stderr)
+            return merged
+        print("[DEBUG] Loyverse API returned no items; falling back to CSV", file=sys.stderr)
 
     rows = parse_export_csv(csv_path) if csv_path else []
+    print(f"[DEBUG] Parsed {len(rows)} rows from CSV", file=sys.stderr)
     eligible = []
     for row in rows:
         qty = str(row.get("quantity") or "").strip()
@@ -382,6 +396,7 @@ def select_eligible_low_stock_items(csv_path: str | os.PathLike[str] | None = No
         if threshold is None:
             continue
         eligible.append(row)
+    print(f"[DEBUG] {len(eligible)} items have quantity and threshold", file=sys.stderr)
     return eligible
 
 
