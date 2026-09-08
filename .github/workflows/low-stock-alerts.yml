@@ -26,7 +26,7 @@ jobs:
           LOYVERSE_API_TOKEN: ${{ secrets.LOYVERSE_API_TOKEN }}
           LOYVERSE_API_BASE_URL: https://api.loyverse.com/v1.0
           SEND_TELEGRAM_MESSAGE: 'true'
-          EVENT_TIME: ${{ github.event.repository.pushed_at || format('{0:O}', now()) }}
         run: |
           set -euo pipefail
+          export EVENT_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
           python3 scripts/low_stock_alerts.py
