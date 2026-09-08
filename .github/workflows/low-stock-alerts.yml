@@ -9,8 +9,12 @@ jobs:
   low-stock:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout Loyverse-Bot
         uses: actions/checkout@v4
+        with:
+          repository: sheerwavetherapy-creator/Loyverse-Bot
+          token: ${{ secrets.LOYVERSE_BOT_REPO_TOKEN }}
+          path: app
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -18,6 +22,7 @@ jobs:
           python-version: '3.12'
 
       - name: Generate low stock alert block
+        working-directory: app
         env:
           EXPORT_CSV_PATH: ${{ vars.EXPORT_CSV_PATH || 'export_items-11.csv' }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
