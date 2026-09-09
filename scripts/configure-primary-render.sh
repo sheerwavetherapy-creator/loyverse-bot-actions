@@ -21,6 +21,10 @@ die() { print "ERROR: $*"; exit 1; }
 SERVICE_ID="${1:-${SERVICE_ID:-}}"
 [ -z "$SERVICE_ID" ] && die "No SERVICE_ID provided. Pass as arg or export SERVICE_ID."
 
+if [ "${ALLOW_UNSAFE_PRIMARY_CONFIG:-false}" != "true" ]; then
+  die "Primary Render sender configuration is disabled after the 2026-09-09 Telegram storm. Fix the Loyverse-Bot app-level backlog guard before setting ALLOW_UNSAFE_PRIMARY_CONFIG=true."
+fi
+
 API_BASE="https://api.render.com/v1"
 AUTH="Authorization: Bearer $RENDER_API_KEY"
 CT="Content-Type: application/json"
