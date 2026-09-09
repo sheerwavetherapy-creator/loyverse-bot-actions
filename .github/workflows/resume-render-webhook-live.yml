@@ -1,0 +1,47 @@
+name: Resume Render Webhook Sender (LIVE)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "ENABLE_WEBHOOK" to resume Render and enable live Telegram sends'
+        required: true
+        default: 'NO'
+      service_id:
+        description: 'Optional: Render Service ID to resume (if blank uses repo secret SERVICE_ID)'
+        required: false
+        default: ''
+
+jobs:
+  resume-live-webhook:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Make script executable
+        run: chmod +x scripts/resume-render-webhook-live.sh
+
+      - name: Require explicit live confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "ENABLE_WEBHOOK" ]; then
+            echo "Confirmation is not ENABLE_WEBHOOK; exiting without changes."
+            exit 1
+          fi
+
+      - name: Resume Render with webhook sends enabled
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          LOYVERSE_WEBHOOK_SECRET: ${{ secrets.LOYVERSE_WEBHOOK_SECRET }}
+          TRIGGER_DEPLOY: 'true'
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event.inputs.service_id }}" != "" ]; then
+            SERVICE_ID="${{ github.event.inputs.service_id }}"
+          else
+            SERVICE_ID="${{ secrets.SERVICE_ID }}"
+          fi
+          export SERVICE_ID
+          ./scripts/resume-render-webhook-live.sh
