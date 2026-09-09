@@ -90,8 +90,8 @@ for i in $(seq 0 $((count - 1))); do
   svc_fail=0
   upsert_env "$sid" "ENABLE_TELEGRAM_SENDS" "false" || svc_fail=$((svc_fail + 1))
   upsert_env "$sid" "PRIMARY_SENDER_ENABLED" "false" || svc_fail=$((svc_fail + 1))
-  delete_env "$sid" "TELEGRAM_BOT_TOKEN" || print "  WARN TELEGRAM_BOT_TOKEN delete failed; sends are still disabled by flag."
-  delete_env "$sid" "TELEGRAM_CHAT_ID" || print "  WARN TELEGRAM_CHAT_ID delete failed; sends are still disabled by flag."
+  upsert_env "$sid" "TELEGRAM_BOT_TOKEN" "disabled-by-emergency-stop" || svc_fail=$((svc_fail + 1))
+  upsert_env "$sid" "TELEGRAM_CHAT_ID" "0" || svc_fail=$((svc_fail + 1))
   suspend_service "$sid" || svc_fail=$((svc_fail + 1))
 
   if [ "$svc_fail" -eq 0 ]; then

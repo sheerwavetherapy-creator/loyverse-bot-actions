@@ -104,14 +104,14 @@ guard_started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 print "Phase 1: starting $service_name with Telegram sends disabled for backlog drain ..."
 upsert_env "PRIMARY_SENDER_ENABLED" "false" || fail=$((fail + 1))
 upsert_env "ENABLE_TELEGRAM_SENDS" "false" || fail=$((fail + 1))
+upsert_env "TELEGRAM_BOT_TOKEN" "disabled-by-startup-guard" || fail=$((fail + 1))
+upsert_env "TELEGRAM_CHAT_ID" "0" || fail=$((fail + 1))
 upsert_env "ALLOW_HISTORICAL_RECOVERY" "false" || fail=$((fail + 1))
 upsert_env "ALLOW_HISTORICAL_POSTS" "false" || fail=$((fail + 1))
 upsert_env "RENDER_STARTUP_GUARD_STARTED_AT" "$guard_started_at" || fail=$((fail + 1))
 upsert_env "LOYVERSE_LIVE_START_TIME" "$guard_started_at" || fail=$((fail + 1))
 upsert_env "LOYVERSE_IGNORE_EVENTS_BEFORE" "$guard_started_at" || fail=$((fail + 1))
 upsert_env "LOYVERSE_WEBHOOK_IGNORE_BEFORE" "$guard_started_at" || fail=$((fail + 1))
-delete_env "TELEGRAM_BOT_TOKEN"
-delete_env "TELEGRAM_CHAT_ID"
 
 if [ "$fail" -gt 0 ]; then
   die "$fail phase 1 env var(s) failed to update."
@@ -152,7 +152,7 @@ if [ "$WARMUP_SECONDS" -gt 0 ]; then
 fi
 
 if [ "$ENABLE_AFTER_WARMUP" != "true" ]; then
-  print "Drain complete. Telegram sends remain disabled and credentials remain absent."
+  print "Drain complete. Telegram sends remain disabled and service-level Telegram credentials remain inert."
   print "Inspect Render logs before running any separate live-enable step."
   exit 0
 fi
