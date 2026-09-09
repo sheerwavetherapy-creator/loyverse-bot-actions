@@ -3,11 +3,12 @@
 #
 # For every service in the Render account this script:
 #   1. Sets ENABLE_TELEGRAM_SENDS=false
-#   2. Blanks TELEGRAM_BOT_TOKEN
-#   3. Blanks TELEGRAM_CHAT_ID
+#   2. Sets PRIMARY_SENDER_ENABLED=false
+#   3. Deletes TELEGRAM_BOT_TOKEN
+#   4. Deletes TELEGRAM_CHAT_ID
 #
 # Required env: RENDER_API_KEY
-# Safe to re-run: setting the same value is a no-op.
+# Safe to re-run: deleting an absent variable is treated as success.
 
 set -euo pipefail
 
@@ -52,6 +53,34 @@ upsert_env() {
   return 1
 }
 
+delete_env() {
+  local sid="$1" key="$2"
+  local resp st
+  resp=$(curl -sS -w "\n%{http_code}" -X DELETE \
+    -H "$AUTH" \
+    "$API_BASE/services/$sid/env-vars/$key" || true)
+  st=$(echo "$resp" | tail -n1)
+  if [ "$st" = "200" ] || [ "$st" = "204" ] || [ "$st" = "404" ]; then
+    return 0
+  fi
+  echo "$resp" | sed '$d' | head -n5
+  return 1
+}
+
+suspend_service() {
+  local sid="$1"
+  local resp st
+  resp=$(curl -sS -w "\n%{http_code}" -X POST \
+    -H "$AUTH" \
+    "$API_BASE/services/$sid/suspend" || true)
+  st=$(echo "$resp" | tail -n1)
+  if [ "$st" = "200" ] || [ "$st" = "201" ] || [ "$st" = "202" ] || [ "$st" = "204" ] || [ "$st" = "409" ]; then
+    return 0
+  fi
+  echo "$resp" | sed '$d' | head -n5
+  return 1
+}
+
 fail=0
 for i in $(seq 0 $((count - 1))); do
   sid=$(echo "$body" | jq -r ".[$i].service.id")
@@ -60,11 +89,13 @@ for i in $(seq 0 $((count - 1))); do
 
   svc_fail=0
   upsert_env "$sid" "ENABLE_TELEGRAM_SENDS" "false" || svc_fail=$((svc_fail + 1))
-  upsert_env "$sid" "TELEGRAM_BOT_TOKEN" "" || svc_fail=$((svc_fail + 1))
-  upsert_env "$sid" "TELEGRAM_CHAT_ID" "" || svc_fail=$((svc_fail + 1))
+  upsert_env "$sid" "PRIMARY_SENDER_ENABLED" "false" || svc_fail=$((svc_fail + 1))
+  delete_env "$sid" "TELEGRAM_BOT_TOKEN" || print "  WARN TELEGRAM_BOT_TOKEN delete failed; sends are still disabled by flag."
+  delete_env "$sid" "TELEGRAM_CHAT_ID" || print "  WARN TELEGRAM_CHAT_ID delete failed; sends are still disabled by flag."
+  suspend_service "$sid" || svc_fail=$((svc_fail + 1))
 
   if [ "$svc_fail" -eq 0 ]; then
-    print "  OK"
+    print "  OK - sends disabled and service suspended"
   else
     print "  FAILED ($svc_fail var(s))"
     fail=$((fail + 1))
@@ -75,5 +106,5 @@ print ""
 if [ "$fail" -gt 0 ]; then
   die "$fail service(s) failed to update. Check logs above."
 else
-  print "All $count service(s) updated: ENABLE_TELEGRAM_SENDS=false, tokens blanked."
+  print "All $count service(s) updated: ENABLE_TELEGRAM_SENDS=false and services suspended."
 fi
