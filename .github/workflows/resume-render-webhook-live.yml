@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Type "ENABLE_WEBHOOK" to resume Render and enable live Telegram sends'
+        description: 'Disabled after backlog storm. Type "I_UNDERSTAND_STORM_RISK" only after fixing the app backlog guard.'
         required: true
         default: 'NO'
       service_id:
@@ -24,8 +24,9 @@ jobs:
 
       - name: Require explicit live confirmation
         run: |
-          if [ "${{ github.event.inputs.confirm }}" != "ENABLE_WEBHOOK" ]; then
-            echo "Confirmation is not ENABLE_WEBHOOK; exiting without changes."
+          if [ "${{ github.event.inputs.confirm }}" != "I_UNDERSTAND_STORM_RISK" ]; then
+            echo "Live webhook resume is disabled after the 2026-09-09 historical backlog storm."
+            echo "Do not re-enable Telegram sends until the Render app ignores historical Loyverse backlog events on startup."
             exit 1
           fi
 
