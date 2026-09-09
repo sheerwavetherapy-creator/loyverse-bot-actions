@@ -493,12 +493,21 @@ def telegram_send_message(text: str, bot_token: str | None = None, chat_id: str 
         "parse_mode": "HTML",
     }
     if topic_id:
-        payload["message_thread_id"] = str(topic_id)
+        # Convert topic_id to int if possible; Telegram API expects integer for message_thread_id
+        try:
+            payload["message_thread_id"] = int(str(topic_id).split('/')[-1])
+        except (ValueError, AttributeError):
+            payload["message_thread_id"] = str(topic_id)
 
     import json
     import urllib.request
+    from urllib import error as urlerror
 
     endpoint = f"https://api.telegram.org/bot{token}/sendMessage"
+    
+    # Debug: log the payload being sent
+    print(f"[DEBUG] Telegram payload: {json.dumps(payload)[:500]}...", file=sys.stderr)
+    
     req = urllib.request.Request(
         endpoint,
         data=json.dumps(payload).encode("utf-8"),
@@ -516,6 +525,14 @@ def telegram_send_message(text: str, bot_token: str | None = None, chat_id: str 
                 return True
             print(f"[ERROR] Telegram API response missing 'ok': {body[:200]}", file=sys.stderr)
             return False
+    except urlerror.HTTPError as http_exc:
+        # Capture HTTP error details including response body
+        try:
+            error_body = http_exc.read().decode("utf-8", errors="replace")
+        except Exception:
+            error_body = "(unable to read error body)"
+        print(f"[ERROR] Telegram HTTP {http_exc.code}: {error_body[:500]}", file=sys.stderr)
+        return False
     except Exception as exc:
         print(f"[ERROR] Telegram POST failed: {exc}", file=sys.stderr)
         return False
