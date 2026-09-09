@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Resume the primary Render service with live webhook Telegram sends enabled.
+# Resume the primary Render service with a startup drain before live sends are enabled.
 
 set -euo pipefail
 
@@ -13,8 +13,10 @@ require_env() {
 
 require_env "RENDER_API_KEY"
 require_env "SERVICE_ID"
-require_env "TELEGRAM_BOT_TOKEN"
-require_env "TELEGRAM_CHAT_ID"
+WARMUP_SECONDS="${WARMUP_SECONDS:-300}"
+case "$WARMUP_SECONDS" in
+  ''|*[!0-9]*) die "WARMUP_SECONDS must be a whole number of seconds." ;;
+esac
 
 API_BASE="https://api.render.com/v1"
 AUTH="Authorization: Bearer $RENDER_API_KEY"
@@ -53,6 +55,37 @@ upsert_env() {
   return 1
 }
 
+delete_env() {
+  local key="$1"
+
+  render_request "DELETE" "/services/$SERVICE_ID/env-vars/$key"
+  if [ "$render_status" = "200" ] || [ "$render_status" = "204" ] || [ "$render_status" = "404" ]; then
+    print "  OK   $key removed or absent (HTTP $render_status)"
+    return 0
+  fi
+
+  print "  WARN $key delete returned HTTP $render_status"
+  echo "$render_body" | head -n5
+  return 0
+}
+
+trigger_deploy() {
+  local label="$1"
+
+  print "$label"
+  render_request "POST" "/services/$SERVICE_ID/deploys" '{"clearCache":"do_not_clear"}'
+  case "$render_status" in
+    200|201|202)
+      print "  OK   deploy requested (HTTP $render_status)"
+      ;;
+    *)
+      print "[render] HTTP $render_status"
+      echo "$render_body" | head -n10
+      die "Failed to trigger deploy."
+      ;;
+  esac
+}
+
 print "Verifying Render service $SERVICE_ID ..."
 render_request "GET" "/services/$SERVICE_ID"
 if [ "$render_status" != "200" ]; then
@@ -65,11 +98,23 @@ service_name=$(echo "$render_body" | jq -r '.name // .service.name // "unknown"'
 print "Service found: $service_name"
 
 fail=0
-print "Enabling live webhook Telegram sends on $service_name ($SERVICE_ID) ..."
-upsert_env "PRIMARY_SENDER_ENABLED" "true" || fail=$((fail + 1))
-upsert_env "ENABLE_TELEGRAM_SENDS" "true" || fail=$((fail + 1))
-upsert_env "TELEGRAM_BOT_TOKEN" "$TELEGRAM_BOT_TOKEN" || fail=$((fail + 1))
-upsert_env "TELEGRAM_CHAT_ID" "$TELEGRAM_CHAT_ID" || fail=$((fail + 1))
+guard_started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+print "Phase 1: starting $service_name with Telegram sends disabled for backlog drain ..."
+upsert_env "PRIMARY_SENDER_ENABLED" "false" || fail=$((fail + 1))
+upsert_env "ENABLE_TELEGRAM_SENDS" "false" || fail=$((fail + 1))
+upsert_env "ALLOW_HISTORICAL_RECOVERY" "false" || fail=$((fail + 1))
+upsert_env "ALLOW_HISTORICAL_POSTS" "false" || fail=$((fail + 1))
+upsert_env "RENDER_STARTUP_GUARD_STARTED_AT" "$guard_started_at" || fail=$((fail + 1))
+upsert_env "LOYVERSE_LIVE_START_TIME" "$guard_started_at" || fail=$((fail + 1))
+upsert_env "LOYVERSE_IGNORE_EVENTS_BEFORE" "$guard_started_at" || fail=$((fail + 1))
+upsert_env "LOYVERSE_WEBHOOK_IGNORE_BEFORE" "$guard_started_at" || fail=$((fail + 1))
+delete_env "TELEGRAM_BOT_TOKEN"
+delete_env "TELEGRAM_CHAT_ID"
+
+if [ "$fail" -gt 0 ]; then
+  die "$fail phase 1 env var(s) failed to update."
+fi
 
 if [ -n "${LOYVERSE_WEBHOOK_SECRET:-}" ]; then
   upsert_env "LOYVERSE_WEBHOOK_SECRET" "$LOYVERSE_WEBHOOK_SECRET" || fail=$((fail + 1))
@@ -98,19 +143,27 @@ case "$render_status" in
     ;;
 esac
 
-if [ "${TRIGGER_DEPLOY:-true}" = "true" ]; then
-  print "Triggering deploy so the live env changes are loaded ..."
-  render_request "POST" "/services/$SERVICE_ID/deploys" '{"clearCache":"do_not_clear"}'
-  case "$render_status" in
-    200|201|202)
-      print "  OK   deploy requested (HTTP $render_status)"
-      ;;
-    *)
-      print "[render] HTTP $render_status"
-      echo "$render_body" | head -n10
-      die "Failed to trigger deploy."
-      ;;
-  esac
+trigger_deploy "Triggering guarded startup deploy with sends disabled ..."
+
+if [ "$WARMUP_SECONDS" -gt 0 ]; then
+  print "Waiting ${WARMUP_SECONDS}s for startup backlog to drain with sends disabled ..."
+  sleep "$WARMUP_SECONDS"
 fi
 
-print "Live webhook sender enabled for $service_name."
+require_env "TELEGRAM_BOT_TOKEN"
+require_env "TELEGRAM_CHAT_ID"
+
+fail=0
+print "Phase 2: enabling live webhook Telegram sends after guarded startup drain ..."
+upsert_env "TELEGRAM_BOT_TOKEN" "$TELEGRAM_BOT_TOKEN" || fail=$((fail + 1))
+upsert_env "TELEGRAM_CHAT_ID" "$TELEGRAM_CHAT_ID" || fail=$((fail + 1))
+upsert_env "PRIMARY_SENDER_ENABLED" "true" || fail=$((fail + 1))
+upsert_env "ENABLE_TELEGRAM_SENDS" "true" || fail=$((fail + 1))
+
+if [ "$fail" -gt 0 ]; then
+  die "$fail phase 2 env var(s) failed to update."
+fi
+
+trigger_deploy "Triggering live sender deploy after startup drain ..."
+
+print "Live webhook sender enabled for $service_name after guarded startup drain from $guard_started_at."

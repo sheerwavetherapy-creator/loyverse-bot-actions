@@ -4,9 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Disabled after backlog storm. Type "I_UNDERSTAND_STORM_RISK" only after fixing the app backlog guard.'
+        description: 'Type "START_GUARDED_WEBHOOK" to resume with sends disabled first, then enable after drain.'
         required: true
         default: 'NO'
+      warmup_seconds:
+        description: 'Seconds to keep Telegram sends disabled after resume before enabling live sends'
+        required: true
+        default: '300'
       service_id:
         description: 'Optional: Render Service ID to resume (if blank uses repo secret SERVICE_ID)'
         required: false
@@ -24,9 +28,8 @@ jobs:
 
       - name: Require explicit live confirmation
         run: |
-          if [ "${{ github.event.inputs.confirm }}" != "I_UNDERSTAND_STORM_RISK" ]; then
-            echo "Live webhook resume is disabled after the 2026-09-09 historical backlog storm."
-            echo "Do not re-enable Telegram sends until the Render app ignores historical Loyverse backlog events on startup."
+          if [ "${{ github.event.inputs.confirm }}" != "START_GUARDED_WEBHOOK" ]; then
+            echo "Confirmation is not START_GUARDED_WEBHOOK; exiting without changes."
             exit 1
           fi
 
@@ -36,7 +39,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           LOYVERSE_WEBHOOK_SECRET: ${{ secrets.LOYVERSE_WEBHOOK_SECRET }}
-          TRIGGER_DEPLOY: 'true'
+          WARMUP_SECONDS: ${{ github.event.inputs.warmup_seconds }}
         run: |
           set -euo pipefail
           if [ "${{ github.event.inputs.service_id }}" != "" ]; then
