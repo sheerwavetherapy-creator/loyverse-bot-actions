@@ -397,8 +397,11 @@ def select_eligible_low_stock_items(csv_path: str | os.PathLike[str] | None = No
             print(f"[DEBUG] Fetched {len(rows)} items from Loyverse API", file=sys.stderr)
             merged = merge_api_rows_with_thresholds(rows, csv_path)
             print(f"[DEBUG] {len(merged)} items have thresholds after merge", file=sys.stderr)
-            return merged
-        print("[DEBUG] Loyverse API returned no items; falling back to CSV", file=sys.stderr)
+            # Check if merged rows have quantity data; if not, fall back to CSV
+            has_quantity = any(str(row.get("quantity") or "").strip() for row in merged)
+            if has_quantity:
+                return merged
+            print("[DEBUG] API items lack quantity data; falling back to CSV for inventory", file=sys.stderr)
 
     rows = parse_export_csv(csv_path) if csv_path else []
     print(f"[DEBUG] Parsed {len(rows)} rows from CSV", file=sys.stderr)
