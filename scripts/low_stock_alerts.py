@@ -27,6 +27,7 @@ STATE_FILE = Path.home() / ".telegram_state.json"
 
 INVENTORY_TOPIC_ID = "4442209616/1895"
 INVENTORY_TOPIC_URL = "t.me/c/4442209616/1895"
+ANTIQUATED_EVENT_MAX_AGE_SECONDS = 300
 
 # Categories that are explicitly excluded from suggestion prompts.
 SUGGESTION_EXCEPTIONS = {
@@ -52,7 +53,7 @@ def is_antiquated_event(event_time: str | None, now: int | None = None) -> bool:
         return False
     timestamp = parsed.timestamp()
     current = now if now is not None else int(time.time())
-    return timestamp < current
+    return timestamp < (current - ANTIQUATED_EVENT_MAX_AGE_SECONDS)
 
 
 def is_older_than_last_processed(event_time: str | None, last_processed: str | None) -> bool:

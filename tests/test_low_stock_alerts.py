@@ -1,4 +1,5 @@
 from decimal import Decimal
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest import mock
 
@@ -13,6 +14,7 @@ from scripts.low_stock_alerts import (
     parse_threshold_value,
     format_quantity,
     set_latest_topic_timestamp,
+    telegram_send_message,
 )
 from scripts.telegram_lowstock_bot import is_lowstock_command
 
@@ -132,8 +134,28 @@ def test_normalize_name_is_stable_for_matching():
 
 def test_antiquated_event_is_rejected_even_when_message_is_valid():
     now = 1_700_000_000
+    recent_event = datetime.fromtimestamp(now - 30, tz=timezone.utc).isoformat().replace("+00:00", "Z")
     assert is_antiquated_event("2023-01-01T00:00:00Z", now=now) is True
-    assert is_antiquated_event("2026-09-08T12:00:00Z", now=now) is False
+    assert is_antiquated_event(recent_event, now=now) is False
+
+
+def test_telegram_send_message_allows_recent_event_times():
+    event_time = "2026-09-09T09:08:25Z"
+    response = mock.MagicMock()
+    response.read.return_value = b'{"ok":true}'
+    urlopen = mock.MagicMock()
+    urlopen.return_value.__enter__.return_value = response
+
+    with (
+        mock.patch("urllib.request.urlopen", urlopen),
+        mock.patch("scripts.low_stock_alerts.time.time", return_value=1_788_944_935),
+    ):
+        assert telegram_send_message(
+            "hello",
+            bot_token="token",
+            chat_id="chat",
+            event_time=event_time,
+        ) is True
 
 
 def test_events_older_than_last_processed_are_rejected():
@@ -162,4 +184,3 @@ def test_topic_timestamp_guard_prevents_older_messages():
         
         # Clean up test file.
         Path("/tmp/test_state.json").unlink(missing_ok=True)
-
