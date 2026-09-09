@@ -468,19 +468,23 @@ def telegram_send_message(text: str, bot_token: str | None = None, chat_id: str 
     token = (bot_token or os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
     target = (chat_id or os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
     if not token or not target:
+        print("[ERROR] Telegram credentials missing: token or chat_id not set", file=sys.stderr)
         return False
 
     allow_historical = os.environ.get("ALLOW_HISTORICAL_POSTS", "false").strip().lower() in {"1", "true", "yes", "y"}
     last_processed = os.environ.get("LAST_PROCESSED_EVENT_TIME")
     if event_time and is_antiquated_event(event_time) and not allow_historical:
+        print(f"[SKIP] Event time {event_time} is antiquated and ALLOW_HISTORICAL_POSTS not enabled", file=sys.stderr)
         return False
     if event_time and last_processed and is_older_than_last_processed(event_time, last_processed) and not allow_historical:
+        print(f"[SKIP] Event time {event_time} is older than LAST_PROCESSED_EVENT_TIME {last_processed}", file=sys.stderr)
         return False
 
     # Reject messages with timestamps older than the latest known message in this topic (prevents duplicate storms).
     if event_time and target:
         latest_stored = get_latest_topic_timestamp(target, topic_id)
         if latest_stored and event_time < latest_stored:
+            print(f"[SKIP] Event time {event_time} is older than latest stored {latest_stored} for topic {topic_id}", file=sys.stderr)
             return False
 
     payload = {
@@ -508,9 +512,12 @@ def telegram_send_message(text: str, bot_token: str | None = None, chat_id: str 
                 # Update the latest timestamp for this topic to prevent future older messages.
                 if event_time and target:
                     set_latest_topic_timestamp(target, topic_id, event_time)
+                print(f"[OK] Telegram message posted to chat {target} topic {topic_id}", file=sys.stderr)
                 return True
+            print(f"[ERROR] Telegram API response missing 'ok': {body[:200]}", file=sys.stderr)
             return False
-    except Exception:
+    except Exception as exc:
+        print(f"[ERROR] Telegram POST failed: {exc}", file=sys.stderr)
         return False
 
 
@@ -525,13 +532,16 @@ def main() -> int:
 
     if os.environ.get("SEND_TELEGRAM_MESSAGE", "false").lower() in {"1", "true", "yes"}:
         event_time = os.environ.get("EVENT_TIME")
-        telegram_send_message(
+        success = telegram_send_message(
             message,
             bot_token=os.environ.get("TELEGRAM_BOT_TOKEN"),
             chat_id=os.environ.get("TELEGRAM_CHAT_ID"),
             topic_id=os.environ.get("TELEGRAM_INVENTORY_TOPIC_ID"),
             event_time=event_time,
         )
+        if not success:
+            print("[WARN] Low stock alert generated but failed to post to Telegram", file=sys.stderr)
+            return 1
     return 0
 
 
