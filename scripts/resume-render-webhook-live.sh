@@ -17,6 +17,7 @@ WARMUP_SECONDS="${WARMUP_SECONDS:-300}"
 case "$WARMUP_SECONDS" in
   ''|*[!0-9]*) die "WARMUP_SECONDS must be a whole number of seconds." ;;
 esac
+ENABLE_AFTER_WARMUP="${ENABLE_AFTER_WARMUP:-false}"
 
 API_BASE="https://api.render.com/v1"
 AUTH="Authorization: Bearer $RENDER_API_KEY"
@@ -148,6 +149,12 @@ trigger_deploy "Triggering guarded startup deploy with sends disabled ..."
 if [ "$WARMUP_SECONDS" -gt 0 ]; then
   print "Waiting ${WARMUP_SECONDS}s for startup backlog to drain with sends disabled ..."
   sleep "$WARMUP_SECONDS"
+fi
+
+if [ "$ENABLE_AFTER_WARMUP" != "true" ]; then
+  print "Drain complete. Telegram sends remain disabled and credentials remain absent."
+  print "Inspect Render logs before running any separate live-enable step."
+  exit 0
 fi
 
 require_env "TELEGRAM_BOT_TOKEN"

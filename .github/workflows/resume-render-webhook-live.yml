@@ -4,13 +4,17 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Type "START_GUARDED_WEBHOOK" to resume with sends disabled first, then enable after drain.'
+        description: 'Type "START_DRAIN_ONLY" to resume with Telegram sends disabled for backlog drain.'
         required: true
         default: 'NO'
       warmup_seconds:
         description: 'Seconds to keep Telegram sends disabled after resume before enabling live sends'
         required: true
         default: '300'
+      enable_after_warmup:
+        description: 'Set to true only after verifying the app does not queue historical backlog messages'
+        required: true
+        default: 'false'
       service_id:
         description: 'Optional: Render Service ID to resume (if blank uses repo secret SERVICE_ID)'
         required: false
@@ -28,8 +32,13 @@ jobs:
 
       - name: Require explicit live confirmation
         run: |
-          if [ "${{ github.event.inputs.confirm }}" != "START_GUARDED_WEBHOOK" ]; then
-            echo "Confirmation is not START_GUARDED_WEBHOOK; exiting without changes."
+          if [ "${{ github.event.inputs.confirm }}" != "START_DRAIN_ONLY" ]; then
+            echo "Confirmation is not START_DRAIN_ONLY; exiting without changes."
+            exit 1
+          fi
+          if [ "${{ github.event.inputs.enable_after_warmup }}" = "true" ]; then
+            echo "Automatic live enable is blocked after repeated backlog storms."
+            echo "Run drain-only first, inspect Render logs, then enable sends manually only after the app is quiet."
             exit 1
           fi
 
@@ -40,6 +49,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           LOYVERSE_WEBHOOK_SECRET: ${{ secrets.LOYVERSE_WEBHOOK_SECRET }}
           WARMUP_SECONDS: ${{ github.event.inputs.warmup_seconds }}
+          ENABLE_AFTER_WARMUP: ${{ github.event.inputs.enable_after_warmup }}
         run: |
           set -euo pipefail
           if [ "${{ github.event.inputs.service_id }}" != "" ]; then
