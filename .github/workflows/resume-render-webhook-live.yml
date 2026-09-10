@@ -1,0 +1,61 @@
+name: Resume Render Webhook Sender (LIVE)
+
+on:
+  workflow_dispatch:
+    inputs:
+      cutoff_receipt:
+        description: 'Receipt boundary; live processing starts after this receipt (for example 1-4609).'
+        required: true
+      confirm:
+        description: 'Type ENABLE_WEBHOOK to authorize replay and persistent live activation.'
+        required: true
+        default: 'NO'
+      warmup_seconds:
+        description: 'Guarded startup duration before live sends are enabled.'
+        required: true
+        default: '60'
+      service_id:
+        description: 'Optional Render service ID; blank uses SERVICE_ID secret.'
+        required: false
+        default: ''
+
+jobs:
+  resume-live-webhook:
+    runs-on: ubuntu-latest
+    environment: live-replay
+    steps:
+      - name: Require explicit live confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "ENABLE_WEBHOOK" ]; then
+            echo "Confirmation is not ENABLE_WEBHOOK; exiting without changes."
+            exit 1
+          fi
+
+      - name: Checkout recovery workflow
+        uses: actions/checkout@v4
+
+      - name: Make activation script executable
+        run: chmod +x scripts/resume-render-webhook-live.sh
+
+      - name: Replay missed activity and activate persistent webhook
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SERVICE_ID: ${{ github.event.inputs.service_id || secrets.SERVICE_ID }}
+          LOYVERSE_API_TOKEN: ${{ secrets.LOYVERSE_API_TOKEN }}
+          LOYVERSE_WEBHOOK_SECRET: ${{ secrets.LOYVERSE_WEBHOOK_SECRET }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_PAYINPAYOUT_TOPIC_ID: ${{ secrets.TELEGRAM_PAYINPAYOUT_TOPIC_ID }}
+          LOYVERSE_REPLAY_CUTOFF_RECEIPT: ${{ github.event.inputs.cutoff_receipt }}
+          WARMUP_SECONDS: ${{ github.event.inputs.warmup_seconds }}
+          PRIMARY_SENDER_ENABLED: 'true'
+          ENABLE_TELEGRAM_SENDS: 'true'
+          ALLOW_HISTORICAL_RECOVERY: 'true'
+        run: |
+          set -euo pipefail
+          : "${LOYVERSE_REPLAY_CUTOFF_RECEIPT:?cutoff_receipt is required}"
+          git clone --depth 1 "https://x-access-token:${{ secrets.LOYVERSE_BOT_REPO_TOKEN }}@github.com/sheerwavetherapy-creator/Loyverse-Bot.git" app
+          npm --prefix app install
+          npm --prefix app run build
+          npm --prefix app run recover:chronological -- --after-receipt="${LOYVERSE_REPLAY_CUTOFF_RECEIPT}"
+          ./scripts/resume-render-webhook-live.sh
