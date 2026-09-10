@@ -83,6 +83,19 @@ wait_for_service_to_activate() {
 render_request GET "/services/$SERVICE_ID"
 [ "$RENDER_STATUS" = "200" ] || die "Service $SERVICE_ID was not found (HTTP $RENDER_STATUS)."
 SERVICE_NAME=$(printf '%s\n' "$RENDER_BODY" | jq -r '.name // .service.name // "unknown"')
+
+render_request GET "/services/$SERVICE_ID/env-vars"
+[ "$RENDER_STATUS" = "200" ] || die "Could not read Render env vars for $SERVICE_ID (HTTP $RENDER_STATUS)."
+if printf '%s\n' "$RENDER_BODY" | jq -e '.[] | select(.key == "TELEGRAM_KILL_SWITCH" and (.value == "true" or .value == "1"))' >/dev/null; then
+  die "Emergency storm kill switch is ACTIVE on Render service $SERVICE_ID; resume is blocked."
+fi
+if printf '%s\n' "$RENDER_BODY" | jq -e '.[] | select(.key == "ENABLE_TELEGRAM_SENDS" and (.value == "true" or .value == "1"))' >/dev/null; then
+  die "Telegram sends are still enabled on Render service $SERVICE_ID; resume is blocked."
+fi
+if printf '%s\n' "$RENDER_BODY" | jq -e '.[] | select(.key == "PRIMARY_SENDER_ENABLED" and (.value == "true" or .value == "1"))' >/dev/null; then
+  die "Primary sender flag is still enabled on Render service $SERVICE_ID; resume is blocked."
+fi
+
 print "Preparing persistent live webhook for $SERVICE_NAME after $LOYVERSE_REPLAY_CUTOFF_RECEIPT"
 
 STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
