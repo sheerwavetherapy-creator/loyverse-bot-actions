@@ -15,8 +15,16 @@ require_env SERVICE_ID
 require_env LOYVERSE_REPLAY_CUTOFF_RECEIPT
 
 WARMUP_SECONDS="${WARMUP_SECONDS:-60}"
+RENDER_READY_TIMEOUT_SECONDS="${RENDER_READY_TIMEOUT_SECONDS:-180}"
+RENDER_READY_CHECK_INTERVAL_SECONDS="${RENDER_READY_CHECK_INTERVAL_SECONDS:-10}"
 case "$WARMUP_SECONDS" in
   ''|*[!0-9]*) die "WARMUP_SECONDS must be a whole number of seconds." ;;
+esac
+case "$RENDER_READY_TIMEOUT_SECONDS" in
+  ''|*[!0-9]*) die "RENDER_READY_TIMEOUT_SECONDS must be a whole number of seconds." ;;
+esac
+case "$RENDER_READY_CHECK_INTERVAL_SECONDS" in
+  ''|*[!0-9]*) die "RENDER_READY_CHECK_INTERVAL_SECONDS must be a whole number of seconds." ;;
 esac
 
 API_BASE="https://api.render.com/v1"
@@ -50,6 +58,28 @@ trigger_deploy() {
   esac
 }
 
+wait_for_service_to_activate() {
+  local elapsed=0
+  while [ "$elapsed" -lt "$RENDER_READY_TIMEOUT_SECONDS" ]; do
+    render_request GET "/services/$SERVICE_ID"
+    [ "$RENDER_STATUS" = "200" ] || die "Could not verify service after resume (HTTP $RENDER_STATUS)."
+
+    SERVICE_SUSPENDED=$(printf '%s\n' "$RENDER_BODY" | jq -r '.suspended // true')
+    SERVICE_STATE=$(printf '%s\n' "$RENDER_BODY" | jq -r '.state // .service.state // "unknown"')
+    if [ "$SERVICE_SUSPENDED" = "false" ]; then
+      print "Service active after guarded startup (state=${SERVICE_STATE}, elapsed=${elapsed}s)"
+      return 0
+    fi
+
+    print "Service still suspended (state=${SERVICE_STATE}, elapsed=${elapsed}s); waiting ${RENDER_READY_CHECK_INTERVAL_SECONDS}s for Render to resume"
+    sleep "$RENDER_READY_CHECK_INTERVAL_SECONDS"
+    elapsed=$((elapsed + RENDER_READY_CHECK_INTERVAL_SECONDS))
+  done
+
+  printf '%s\n' "$RENDER_BODY" | head -n20
+  die "Service did not remain active after guarded startup within ${RENDER_READY_TIMEOUT_SECONDS}s."
+}
+
 render_request GET "/services/$SERVICE_ID"
 [ "$RENDER_STATUS" = "200" ] || die "Service $SERVICE_ID was not found (HTTP $RENDER_STATUS)."
 SERVICE_NAME=$(printf '%s\n' "$RENDER_BODY" | jq -r '.name // .service.name // "unknown"')
@@ -80,10 +110,7 @@ if [ "$WARMUP_SECONDS" -gt 0 ]; then
   sleep "$WARMUP_SECONDS"
 fi
 
-render_request GET "/services/$SERVICE_ID"
-[ "$RENDER_STATUS" = "200" ] || die "Could not verify service after resume (HTTP $RENDER_STATUS)."
-SERVICE_SUSPENDED=$(printf '%s\n' "$RENDER_BODY" | jq -r '.suspended // true')
-[ "$SERVICE_SUSPENDED" = "false" ] || die "Service did not remain active after guarded startup."
+wait_for_service_to_activate
 
 print "Phase 2: enabling persistent live webhook sends"
 require_env TELEGRAM_BOT_TOKEN
