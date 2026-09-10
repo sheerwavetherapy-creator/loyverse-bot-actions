@@ -298,7 +298,7 @@ def threshold_lookup_from_csv(csv_path: str | os.PathLike[str]) -> dict[str, Dec
     return lookup
 
 
-def normalize_api_row(raw: dict[str, Any]) -> dict[str, Any]:
+def normalize_api_row(raw: dict[str, Any], category_map: dict[str, str] | None = None) -> dict[str, Any]:
     name = first_non_empty(
         raw.get("name"),
         raw.get("item_name"),
@@ -310,18 +310,12 @@ def normalize_api_row(raw: dict[str, Any]) -> dict[str, Any]:
         raw.get("category_name"),
         raw.get("categoryName"),
         raw.get("item_category"),
-        raw.get("categoryName"),
     )
     if isinstance(category, dict):
         category = category.get("name") or category.get("title") or category.get("category")
-    cost = first_non_empty(
-        raw.get("cost"),
-        raw.get("purchaseCost"),
-        raw.get("purchase_cost"),
-        raw.get("average_cost"),
-        raw.get("averageCost"),
-        raw.get("price"),
-    )
+    category_id = first_non_empty(raw.get("category_id"), raw.get("categoryId"))
+    if category is None and category_id is not None and category_map:
+        category = category_map.get(str(category_id))
     quantity = first_non_empty(
         raw.get("quantity"),
         raw.get("stock"),
@@ -337,14 +331,24 @@ def normalize_api_row(raw: dict[str, Any]) -> dict[str, Any]:
         quantity = first_non_empty(quantity, stock.get("quantity"), stock.get("on_hand"), stock.get("available"))
     if name is None:
         return {}
+
+    # Loyverse nests cost and variant identifiers per-variant rather than on the item itself.
     variant_ids: list[str] = []
+    cost = first_non_empty(raw.get("cost"), raw.get("purchaseCost"), raw.get("purchase_cost"))
     variants = raw.get("variants")
     if isinstance(variants, list):
         for variant in variants:
-            if isinstance(variant, dict):
-                variant_id = first_non_empty(variant.get("variant_id"), variant.get("id"))
-                if variant_id is not None:
-                    variant_ids.append(str(variant_id))
+            if not isinstance(variant, dict):
+                continue
+            variant_id = first_non_empty(variant.get("variant_id"), variant.get("id"))
+            if variant_id is not None:
+                variant_ids.append(str(variant_id))
+            if cost is None:
+                cost = first_non_empty(
+                    variant.get("cost"),
+                    variant.get("purchase_cost"),
+                    variant.get("default_price"),
+                )
     return {
         "item_name": str(name).strip(),
         "category": str(category or "Uncategorized").strip(),
@@ -354,42 +358,82 @@ def normalize_api_row(raw: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def fetch_loyverse_categories(api_token: str, base_url: str = "https://api.loyverse.com/v1.0") -> dict[str, str]:
+    """Fetch the category_id -> name mapping (the /items endpoint only returns category_id)."""
+    headers = {
+        "Authorization": f"Bearer {api_token}",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+    names: dict[str, str] = {}
+    cursor: str | None = None
+    base = f"{base_url.rstrip('/')}/categories"
+    for _ in range(50):  # safety cap against runaway pagination
+        url = f"{base}?limit=250" + (f"&cursor={cursor}" if cursor else "")
+        try:
+            req = request.Request(url, headers=headers, method="GET")
+            with request.urlopen(req, timeout=30) as response:
+                data = json.loads(response.read().decode("utf-8", errors="replace"))
+        except (error.HTTPError, error.URLError, ValueError, TimeoutError):
+            break
+        if not isinstance(data, dict):
+            break
+        entries = data.get("categories") or data.get("data") or []
+        if not isinstance(entries, list):
+            break
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            category_id = first_non_empty(entry.get("id"), entry.get("category_id"))
+            name = first_non_empty(entry.get("name"), entry.get("category_name"))
+            if category_id is not None and name is not None:
+                names[str(category_id)] = str(name)
+        cursor = data.get("cursor")
+        if not cursor:
+            break
+    return names
+
+
 def fetch_loyverse_items(api_token: str, base_url: str = "https://api.loyverse.com/v1.0") -> list[dict[str, Any]]:
     headers = {
         "Authorization": f"Bearer {api_token}",
         "Accept": "application/json",
         "Content-Type": "application/json",
     }
-    candidates = [
-        f"{base_url.rstrip('/')}/items?limit=100&offset=0",
-        f"{base_url.rstrip('/')}/items",
-    ]
+    resolved_base_url = base_url or "https://api.loyverse.com/v1.0"
+    category_map = fetch_loyverse_categories(api_token, resolved_base_url)
+    print(f"[DEBUG] Fetched {len(category_map)} categories from Loyverse API", file=sys.stderr)
 
-    for url in candidates:
+    rows: list[dict[str, Any]] = []
+    cursor: str | None = None
+    base = f"{resolved_base_url.rstrip('/')}/items"
+    for _ in range(200):  # safety cap against runaway pagination
+        url = f"{base}?limit=250" + (f"&cursor={cursor}" if cursor else "")
         try:
             req = request.Request(url, headers=headers, method="GET")
             with request.urlopen(req, timeout=30) as response:
                 data = json.loads(response.read().decode("utf-8", errors="replace"))
         except (error.HTTPError, error.URLError, ValueError, TimeoutError):
-            continue
+            break
 
         if isinstance(data, list):
             payload = data
+            cursor = None
         elif isinstance(data, dict):
-            payload = data.get("data") or data.get("items") or data.get("results") or []
+            payload = data.get("items") or data.get("data") or data.get("results") or []
+            cursor = data.get("cursor")
         else:
-            payload = []
+            break
 
-        rows = []
         if isinstance(payload, list):
             for item in payload:
                 if isinstance(item, dict):
-                    normalized = normalize_api_row(item)
+                    normalized = normalize_api_row(item, category_map)
                     if normalized:
                         rows.append(normalized)
-        if rows:
-            return rows
-    return []
+        if not cursor:
+            break
+    return rows
 
 
 def fetch_loyverse_inventory_levels(api_token: str, base_url: str = "https://api.loyverse.com/v1.0") -> dict[str, Decimal]:
