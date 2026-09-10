@@ -93,7 +93,7 @@ if [ "$confirm_disable" = "YES" ]; then
   if ! RENDER_API_KEY="$RENDER_API_KEY" "$SCRIPT_DIR/disable-all-render-telegrams.sh"; then
     die "Disable script failed. Inspect logs above for '[render] HTTP ...' errors."
   fi
-  print "Disable step completed; tokens blanked and ENABLE_TELEGRAM_SENDS=false applied (idempotent)."
+  print "Disable step completed; Telegram credentials removed and sends disabled on all services (idempotent)."
 else
   print "Skipping disable step as requested by operator."
 fi
@@ -146,7 +146,7 @@ if [ "$conf_dryrun" = "YES" ]; then
   mkdir -p "$APP_DIR/replay-output" "$APP_DIR/logs"
   : "${LOYVERSE_REPLAY_CUTOFF_RECEIPT:?Set LOYVERSE_REPLAY_CUTOFF_RECEIPT before running recovery.}"
   # Ensure safety flags are set in env for this run
-  ENABLE_TELEGRAM_SENDS='false' ALLOW_HISTORICAL_RECOVERY='true' npm --prefix "$APP_DIR" run recover:chronological -- --dry-run --after-receipt "$LOYVERSE_REPLAY_CUTOFF_RECEIPT" 2>&1 | tee "$APP_DIR/logs/chronological-dryrun-$(date +%Y%m%dT%H%M%S).log"
+  ENABLE_TELEGRAM_SENDS='false' ALLOW_HISTORICAL_RECOVERY='true' npm --prefix "$APP_DIR" run recover:chronological -- --dry-run --after-receipt="$LOYVERSE_REPLAY_CUTOFF_RECEIPT" 2>&1 | tee "$APP_DIR/logs/chronological-dryrun-$(date +%Y%m%dT%H%M%S).log"
 
   print "Dry-run finished. Check $APP_DIR/logs/ for the run log and $APP_DIR/replay-output/ for any generated artifacts."
 else

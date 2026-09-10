@@ -24,6 +24,9 @@ from urllib import request, error
 
 STATE_FILE = Path.home() / ".telegram_state.json"
 
+# Tracks the previously posted low-stock alert message so it can be deleted on regeneration.
+ALERT_STATE_FILE = Path(os.environ.get("LOW_STOCK_ALERT_STATE_FILE") or "low_stock_alert_state.json")
+
 
 INVENTORY_TOPIC_ID = "4442209616/1895"
 INVENTORY_TOPIC_URL = "t.me/c/4442209616/1895"
@@ -37,7 +40,7 @@ SUGGESTION_EXCEPTIONS = {
 
 
 def normalize_name(value: Any) -> str:
-    return str(value or "").strip().lower().replace("  ", " ")
+    return " ".join(str(value or "").strip().lower().split())
 
 
 def is_antiquated_event(event_time: str | None, now: int | None = None) -> bool:
@@ -85,13 +88,21 @@ def first_non_empty(*values: Any) -> Any:
     return None
 
 
+def normalize_header_name(value: Any) -> str:
+    return " ".join(str(value or "").strip().lower().split())
+
+
 def first_header_value(headers: dict[str, Any], exact_names: Iterable[str], prefixes: Iterable[str]) -> Any:
-    value = first_non_empty(*(headers.get(name) for name in exact_names))
-    if value is not None:
-        return value
+    exact_aliases = {normalize_header_name(name) for name in exact_names}
     for key, candidate in headers.items():
-        lowered_key = key.lower()
-        if any(lowered_key.startswith(prefix.lower()) for prefix in prefixes):
+        normalized_key = normalize_header_name(key)
+        if normalized_key in exact_aliases:
+            value = first_non_empty(candidate)
+            if value is not None:
+                return value
+    for key, candidate in headers.items():
+        normalized_key = normalize_header_name(key)
+        if any(normalized_key.startswith(normalize_header_name(prefix)) for prefix in prefixes):
             value = first_non_empty(candidate)
             if value is not None:
                 return value
@@ -120,24 +131,27 @@ def parse_export_csv(csv_path: str | os.PathLike[str]) -> list[dict[str, Any]]:
                     continue
                 normalized[key.strip()] = value
 
-            name = first_non_empty(
-                normalized.get("Item Name"),
-                normalized.get("Name"),
-                normalized.get("item_name"),
-                normalized.get("Item"),
+            name = first_header_value(
+                normalized,
+                ("Item Name", "Name", "item_name", "Item"),
+                (),
             )
-            category = first_non_empty(
-                normalized.get("Category"),
-                normalized.get("category"),
-                normalized.get("Item Category"),
+            category = first_header_value(
+                normalized,
+                ("Category", "category", "Item Category"),
+                (),
             )
-            cost_value = first_non_empty(
-                normalized.get("Cost"),
-                normalized.get("purchase cost"),
-                normalized.get("Purchase Cost"),
-                normalized.get("PC"),
-                normalized.get("Item Cost"),
-                normalized.get("Cost (per unit)"),
+            cost_value = first_header_value(
+                normalized,
+                (
+                    "Cost",
+                    "purchase cost",
+                    "Purchase Cost",
+                    "PC",
+                    "Item Cost",
+                    "Cost (per unit)",
+                ),
+                (),
             )
             qty = first_header_value(
                 normalized,
@@ -323,11 +337,20 @@ def normalize_api_row(raw: dict[str, Any]) -> dict[str, Any]:
         quantity = first_non_empty(quantity, stock.get("quantity"), stock.get("on_hand"), stock.get("available"))
     if name is None:
         return {}
+    variant_ids: list[str] = []
+    variants = raw.get("variants")
+    if isinstance(variants, list):
+        for variant in variants:
+            if isinstance(variant, dict):
+                variant_id = first_non_empty(variant.get("variant_id"), variant.get("id"))
+                if variant_id is not None:
+                    variant_ids.append(str(variant_id))
     return {
         "item_name": str(name).strip(),
         "category": str(category or "Uncategorized").strip(),
         "cost": str(cost).strip() if cost is not None else "",
         "quantity": str(quantity).strip() if quantity is not None else "",
+        "variant_ids": variant_ids,
     }
 
 
@@ -369,6 +392,51 @@ def fetch_loyverse_items(api_token: str, base_url: str = "https://api.loyverse.c
     return []
 
 
+def fetch_loyverse_inventory_levels(api_token: str, base_url: str = "https://api.loyverse.com/v1.0") -> dict[str, Decimal]:
+    """Fetch live stock levels keyed by variant_id from the /inventory endpoint.
+
+    The /items endpoint does not include on-hand quantity, so quantity must come from
+    here to avoid relying on the (potentially stale) committed CSV export for stock counts.
+    """
+    headers = {
+        "Authorization": f"Bearer {api_token}",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+    levels: dict[str, Decimal] = {}
+    cursor: str | None = None
+    base = f"{base_url.rstrip('/')}/inventory"
+    for _ in range(50):  # safety cap against runaway pagination
+        url = f"{base}?limit=250" + (f"&cursor={cursor}" if cursor else "")
+        try:
+            req = request.Request(url, headers=headers, method="GET")
+            with request.urlopen(req, timeout=30) as response:
+                data = json.loads(response.read().decode("utf-8", errors="replace"))
+        except (error.HTTPError, error.URLError, ValueError, TimeoutError):
+            break
+        if not isinstance(data, dict):
+            break
+        entries = data.get("inventory_levels") or data.get("data") or []
+        if not isinstance(entries, list):
+            break
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            variant_id = first_non_empty(entry.get("variant_id"), entry.get("id"))
+            in_stock = first_non_empty(entry.get("in_stock"), entry.get("quantity"), entry.get("stock"))
+            if variant_id is None or in_stock is None:
+                continue
+            qty = parse_threshold_value(in_stock)
+            if qty is None:
+                continue
+            key = str(variant_id)
+            levels[key] = levels.get(key, Decimal(0)) + qty
+        cursor = data.get("cursor")
+        if not cursor:
+            break
+    return levels
+
+
 def merge_api_rows_with_thresholds(api_rows: Iterable[dict[str, Any]], csv_path: str | os.PathLike[str] | None = None) -> list[dict[str, Any]]:
     threshold_map = threshold_lookup_from_csv(csv_path) if csv_path else {}
     print(f"[DEBUG] Loaded {len(threshold_map)} thresholds from CSV", file=sys.stderr)
@@ -390,11 +458,34 @@ def merge_api_rows_with_thresholds(api_rows: Iterable[dict[str, Any]], csv_path:
     return merged
 
 
+def apply_live_inventory_quantities(rows: list[dict[str, Any]], inventory_levels: dict[str, Decimal]) -> list[dict[str, Any]]:
+    """Overwrite each row's quantity with the live stock level for its variant(s), when known."""
+    if not inventory_levels:
+        return rows
+    updated: list[dict[str, Any]] = []
+    for row in rows:
+        candidate = dict(row)
+        variant_ids = row.get("variant_ids") or []
+        total = None
+        for variant_id in variant_ids:
+            level = inventory_levels.get(str(variant_id))
+            if level is not None:
+                total = (total or Decimal(0)) + level
+        if total is not None:
+            candidate["quantity"] = format_quantity(total)
+        updated.append(candidate)
+    return updated
+
+
 def select_eligible_low_stock_items(csv_path: str | os.PathLike[str] | None = None, api_token: str | None = None, base_url: str | None = None) -> list[dict[str, Any]]:
     if api_token:
-        rows = fetch_loyverse_items(api_token, base_url or "https://api.loyverse.com/v1.0")
+        resolved_base_url = base_url or "https://api.loyverse.com/v1.0"
+        rows = fetch_loyverse_items(api_token, resolved_base_url)
         if rows:
             print(f"[DEBUG] Fetched {len(rows)} items from Loyverse API", file=sys.stderr)
+            inventory_levels = fetch_loyverse_inventory_levels(api_token, resolved_base_url)
+            print(f"[DEBUG] Fetched {len(inventory_levels)} live inventory levels from Loyverse API", file=sys.stderr)
+            rows = apply_live_inventory_quantities(rows, inventory_levels)
             merged = merge_api_rows_with_thresholds(rows, csv_path)
             print(f"[DEBUG] {len(merged)} items have thresholds after merge", file=sys.stderr)
             # Check if merged rows have quantity data; if not, fall back to CSV
@@ -464,17 +555,80 @@ def set_latest_topic_timestamp(chat_id: str, topic_id: str | None, timestamp: st
         pass
 
 
-def telegram_send_message(text: str, bot_token: str | None = None, chat_id: str | None = None, topic_id: str | None = None, event_time: str | None = None) -> bool:
+def load_alert_state(path: str | os.PathLike[str] | None = None) -> dict[str, Any]:
+    state_path = Path(path) if path is not None else ALERT_STATE_FILE
+    if not state_path.exists():
+        return {}
+    try:
+        return json.loads(state_path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def save_alert_state(state: dict[str, Any], path: str | os.PathLike[str] | None = None) -> None:
+    state_path = Path(path) if path is not None else ALERT_STATE_FILE
+    try:
+        state_path.write_text(json.dumps(state, indent=2))
+    except OSError:
+        pass
+
+
+def telegram_delete_message(bot_token: str, chat_id: str, message_id: int | str) -> bool:
+    import json as _json
+    import urllib.request
+    from urllib import error as urlerror
+
+    endpoint = f"https://api.telegram.org/bot{bot_token}/deleteMessage"
+    payload = {"chat_id": chat_id, "message_id": message_id}
+    req = urllib.request.Request(
+        endpoint,
+        data=_json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as response:
+            body = response.read().decode("utf-8", errors="replace")
+            if '"ok":true' in body.replace(" ", "").lower():
+                print(f"[OK] Deleted previous low stock alert message_id={message_id}", file=sys.stderr)
+                return True
+            print(f"[WARN] Could not delete previous message_id={message_id}: {body[:200]}", file=sys.stderr)
+            return False
+    except urlerror.HTTPError as http_exc:
+        try:
+            error_body = http_exc.read().decode("utf-8", errors="replace")
+        except Exception:
+            error_body = "(unable to read error body)"
+        # A missing/already-deleted message is not fatal; just log and move on.
+        print(f"[WARN] Telegram deleteMessage HTTP {http_exc.code}: {error_body[:300]}", file=sys.stderr)
+        return False
+    except Exception as exc:
+        print(f"[WARN] Telegram deleteMessage failed: {exc}", file=sys.stderr)
+        return False
+
+
+def telegram_send_message(text: str, bot_token: str | None = None, chat_id: str | None = None, topic_id: str | None = None, event_time: str | None = None, on_success: "Any" = None) -> bool:
     token = (bot_token or os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
     target = (chat_id or os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
     if not token or not target:
         print("[ERROR] Telegram credentials missing: token or chat_id not set", file=sys.stderr)
         return False
 
-    allow_historical = os.environ.get("ALLOW_HISTORICAL_POSTS", "false").strip().lower() in {"1", "true", "yes", "y"}
+    historical_flags = (
+        os.environ.get("ALLOW_HISTORICAL_POSTS"),
+        os.environ.get("ALLOW_HISTORICAL_REPLAY"),
+        os.environ.get("ALLOW_HISTORICAL_RECOVERY"),
+    )
+    allow_historical = any(
+        (value or "").strip().lower() in {"1", "true", "yes", "y"}
+        for value in historical_flags
+    )
     last_processed = os.environ.get("LAST_PROCESSED_EVENT_TIME")
     if event_time and is_antiquated_event(event_time) and not allow_historical:
-        print(f"[SKIP] Event time {event_time} is antiquated and ALLOW_HISTORICAL_POSTS not enabled", file=sys.stderr)
+        print(
+            "[SKIP] Event time {} is antiquated and no historical replay flag is enabled".format(event_time),
+            file=sys.stderr,
+        )
         return False
     if event_time and last_processed and is_older_than_last_processed(event_time, last_processed) and not allow_historical:
         print(f"[SKIP] Event time {event_time} is older than LAST_PROCESSED_EVENT_TIME {last_processed}", file=sys.stderr)
@@ -522,6 +676,11 @@ def telegram_send_message(text: str, bot_token: str | None = None, chat_id: str 
                 if event_time and target:
                     set_latest_topic_timestamp(target, topic_id, event_time)
                 print(f"[OK] Telegram message posted to chat {target} topic {topic_id}", file=sys.stderr)
+                if on_success is not None:
+                    try:
+                        on_success(json.loads(body))
+                    except (json.JSONDecodeError, TypeError):
+                        pass
                 return True
             print(f"[ERROR] Telegram API response missing 'ok': {body[:200]}", file=sys.stderr)
             return False
@@ -538,6 +697,52 @@ def telegram_send_message(text: str, bot_token: str | None = None, chat_id: str 
         return False
 
 
+def send_low_stock_alert(
+    message: str,
+    bot_token: str | None,
+    chat_id: str | None,
+    topic_id: str | None,
+    event_time: str | None = None,
+    state_path: str | os.PathLike[str] | None = None,
+) -> bool:
+    state = load_alert_state(state_path)
+    previous_message_id = state.get("message_id")
+    if (
+        previous_message_id
+        and bot_token
+        and chat_id
+        and state.get("chat_id") == chat_id
+        and state.get("topic_id") == topic_id
+    ):
+        telegram_delete_message(bot_token, chat_id, previous_message_id)
+
+    new_message_id: dict[str, Any] = {}
+
+    def capture_message_id(body: dict[str, Any]) -> None:
+        result = body.get("result") or {}
+        if isinstance(result, dict) and result.get("message_id") is not None:
+            new_message_id["message_id"] = result["message_id"]
+
+    success = telegram_send_message(
+        message,
+        bot_token=bot_token,
+        chat_id=chat_id,
+        topic_id=topic_id,
+        event_time=event_time,
+        on_success=capture_message_id,
+    )
+    if success and new_message_id.get("message_id") is not None and chat_id:
+        save_alert_state(
+            {
+                "chat_id": chat_id,
+                "topic_id": topic_id,
+                "message_id": new_message_id["message_id"],
+            },
+            state_path,
+        )
+    return success
+
+
 def main() -> int:
     csv_path = os.environ.get("EXPORT_CSV_PATH")
     if csv_path is None:
@@ -549,7 +754,7 @@ def main() -> int:
 
     if os.environ.get("SEND_TELEGRAM_MESSAGE", "false").lower() in {"1", "true", "yes"}:
         event_time = os.environ.get("EVENT_TIME")
-        success = telegram_send_message(
+        success = send_low_stock_alert(
             message,
             bot_token=os.environ.get("TELEGRAM_BOT_TOKEN"),
             chat_id=os.environ.get("TELEGRAM_CHAT_ID"),

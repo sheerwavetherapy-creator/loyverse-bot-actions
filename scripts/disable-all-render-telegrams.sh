@@ -43,7 +43,7 @@ upsert_env() {
   local resp st
   resp=$(curl -sS -w "\n%{http_code}" -X PUT \
     -H "$AUTH" -H "$CT" \
-    -d "{\"value\":\"$value\"}" \
+    -d "$(jq -nc --arg value "$value" '{value: $value}')" \
     "$API_BASE/services/$sid/env-vars/$key" || true)
   st=$(echo "$resp" | tail -n1)
   if [ "$st" = "200" ] || [ "$st" = "201" ]; then

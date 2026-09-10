@@ -5,6 +5,9 @@ on:
   schedule:
     - cron: '0 6,17 * * *'
 
+permissions:
+  contents: write
+
 jobs:
   low-stock:
     runs-on: ubuntu-latest
@@ -27,7 +30,19 @@ jobs:
           LOYVERSE_API_BASE_URL: https://api.loyverse.com/v1.0
           SEND_TELEGRAM_MESSAGE: 'true'
           ALLOW_HISTORICAL_POSTS: 'true'
+          LOW_STOCK_ALERT_STATE_FILE: low_stock_alert_state.json
         run: |
           set -euo pipefail
           export EVENT_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
           python3 scripts/low_stock_alerts.py
+
+      - name: Persist alert state (previous message id for next regeneration)
+        run: |
+          set -euo pipefail
+          if [ -n "$(git status --porcelain low_stock_alert_state.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add low_stock_alert_state.json
+            git commit -m "chore: update low stock alert state [skip ci]"
+            git push
+          fi
