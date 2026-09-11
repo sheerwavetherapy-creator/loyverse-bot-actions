@@ -3,7 +3,11 @@ name: Low Stock Alerts
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 6,17 * * *'
+    - cron: '*/5 * * * *'
+
+concurrency:
+  group: low-stock-alerts
+  cancel-in-progress: false
 
 permissions:
   contents: write

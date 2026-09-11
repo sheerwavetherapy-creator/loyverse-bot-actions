@@ -11,6 +11,7 @@ This module implements the workflow described for a restored low stock alert fea
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import os
 import sys
@@ -229,7 +230,7 @@ def build_alert_block(rows: Iterable[dict[str, Any]]) -> str:
     if not grouped:
         return "No low stock items at this time."
 
-    lines: list[str] = ["<b>🚨 LOW STOCK ALERT</b>"]
+    lines: list[str] = ["<b>🚨 LOW STOCK ALERT</b>", "----------------------------------"]
     for category in sorted(grouped.keys(), key=lambda value: value.lower()):
         items = sorted(
             grouped[category],
@@ -750,15 +751,12 @@ def send_low_stock_alert(
     state_path: str | os.PathLike[str] | None = None,
 ) -> bool:
     state = load_alert_state(state_path)
+    message_hash = hashlib.sha256(message.encode("utf-8")).hexdigest()
     previous_message_id = state.get("message_id")
-    if (
-        previous_message_id
-        and bot_token
-        and chat_id
-        and state.get("chat_id") == chat_id
-        and state.get("topic_id") == topic_id
-    ):
-        telegram_delete_message(bot_token, chat_id, previous_message_id)
+    same_topic = state.get("chat_id") == chat_id and state.get("topic_id") == topic_id
+    if same_topic and state.get("message_hash") == message_hash:
+        print("[OK] Low stock alert is unchanged; keeping the existing message", file=sys.stderr)
+        return True
 
     new_message_id: dict[str, Any] = {}
 
@@ -776,11 +774,14 @@ def send_low_stock_alert(
         on_success=capture_message_id,
     )
     if success and new_message_id.get("message_id") is not None and chat_id:
+        if previous_message_id and bot_token and same_topic:
+            telegram_delete_message(bot_token, chat_id, previous_message_id)
         save_alert_state(
             {
                 "chat_id": chat_id,
                 "topic_id": topic_id,
                 "message_id": new_message_id["message_id"],
+                "message_hash": message_hash,
             },
             state_path,
         )

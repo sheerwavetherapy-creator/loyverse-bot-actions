@@ -12,6 +12,7 @@ from scripts.low_stock_alerts import (
     parse_export_csv,
     parse_threshold_value,
     format_quantity,
+    send_low_stock_alert,
     set_latest_topic_timestamp,
 )
 from scripts.telegram_lowstock_bot import is_lowstock_command
@@ -76,7 +77,11 @@ def test_build_alert_block_groups_by_category_and_orders_alpha():
         },
     ]
     block = build_alert_block(rows)
-    assert block.startswith("<b>🚨 LOW STOCK ALERT</b>")
+    assert block.startswith(
+        "<b>🚨 LOW STOCK ALERT</b>\n"
+        "----------------------------------\n"
+        "ALCOHOL"
+    )
     assert "ALCOHOL" in block
     assert "Beer" in block
     assert "Wine" in block
@@ -216,4 +221,48 @@ def test_replay_env_gate_blocks_and_allows_historical_events(monkeypatch):
 
         assert telegram_send_message("allowed", bot_token="token", chat_id="123", event_time="2024-01-01T00:00:00Z") is True
         urlopen.assert_called_once()
+
+
+def test_send_low_stock_alert_skips_unchanged_message(tmp_path):
+    state_path = tmp_path / "alert-state.json"
+    message = "same alert"
+    import hashlib
+
+    state_path.write_text(
+        '{"chat_id":"123","topic_id":"1895","message_id":10,'
+        f'"message_hash":"{hashlib.sha256(message.encode()).hexdigest()}"}}'
+    )
+
+    with mock.patch("scripts.low_stock_alerts.telegram_send_message") as send_message:
+        assert send_low_stock_alert(message, "token", "123", "1895", state_path=state_path) is True
+        send_message.assert_not_called()
+
+
+def test_send_low_stock_alert_keeps_previous_message_when_new_post_fails(tmp_path):
+    state_path = tmp_path / "alert-state.json"
+    state_path.write_text('{"chat_id":"123","topic_id":"1895","message_id":10}')
+
+    with mock.patch("scripts.low_stock_alerts.telegram_send_message", return_value=False), mock.patch(
+        "scripts.low_stock_alerts.telegram_delete_message"
+    ) as delete_message:
+        assert send_low_stock_alert("changed alert", "token", "123", "1895", state_path=state_path) is False
+        delete_message.assert_not_called()
+
+
+def test_send_low_stock_alert_replaces_previous_message_after_new_post_succeeds(tmp_path):
+    state_path = tmp_path / "alert-state.json"
+    state_path.write_text('{"chat_id":"123","topic_id":"1895","message_id":10}')
+
+    def successful_send(*args, **kwargs):
+        kwargs["on_success"]({"result": {"message_id": 11}})
+        return True
+
+    with mock.patch("scripts.low_stock_alerts.telegram_send_message", side_effect=successful_send), mock.patch(
+        "scripts.low_stock_alerts.telegram_delete_message", return_value=True
+    ) as delete_message:
+        assert send_low_stock_alert("changed alert", "token", "123", "1895", state_path=state_path) is True
+        delete_message.assert_called_once_with("token", "123", 10)
+
+    assert '"message_id": 11' in state_path.read_text()
+    assert '"message_hash":' in state_path.read_text()
 
