@@ -65,7 +65,7 @@ wait_for_service_to_activate() {
     render_request GET "/services/$SERVICE_ID"
     [ "$RENDER_STATUS" = "200" ] || die "Could not verify service after resume (HTTP $RENDER_STATUS)."
 
-    SERVICE_SUSPENDED=$(printf '%s\n' "$RENDER_BODY" | jq -r '.suspended // true')
+    SERVICE_SUSPENDED=$(printf '%s\n' "$RENDER_BODY" | jq -r '.suspended // .service.suspended // true')
     SERVICE_STATE=$(printf '%s\n' "$RENDER_BODY" | jq -r '.state // .service.state // "unknown"')
     if [ "$SERVICE_SUSPENDED" = "false" ]; then
       print "Service active after guarded startup (state=${SERVICE_STATE}, elapsed=${elapsed}s)"
