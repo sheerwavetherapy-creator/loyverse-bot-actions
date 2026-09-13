@@ -67,7 +67,7 @@ wait_for_service_to_activate() {
 
     SERVICE_SUSPENDED=$(printf '%s\n' "$RENDER_BODY" | jq -r '.suspended // .service.suspended // true')
     SERVICE_STATE=$(printf '%s\n' "$RENDER_BODY" | jq -r '.state // .service.state // "unknown"')
-    if [ "$SERVICE_SUSPENDED" = "false" ]; then
+    if [ "$SERVICE_SUSPENDED" = "false" ] || [ "$SERVICE_SUSPENDED" = "not_suspended" ]; then
       print "Service active after guarded startup (state=${SERVICE_STATE}, elapsed=${elapsed}s)"
       return 0
     fi
