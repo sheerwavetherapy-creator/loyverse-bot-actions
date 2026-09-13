@@ -17,6 +17,7 @@ require_env LOYVERSE_REPLAY_CUTOFF_RECEIPT
 WARMUP_SECONDS="${WARMUP_SECONDS:-60}"
 RENDER_READY_TIMEOUT_SECONDS="${RENDER_READY_TIMEOUT_SECONDS:-180}"
 RENDER_READY_CHECK_INTERVAL_SECONDS="${RENDER_READY_CHECK_INTERVAL_SECONDS:-10}"
+CONFIRM_ENABLE_TELEGRAM_SENDS="${CONFIRM_ENABLE_TELEGRAM_SENDS:-false}"
 case "$WARMUP_SECONDS" in
   ''|*[!0-9]*) die "WARMUP_SECONDS must be a whole number of seconds." ;;
 esac
@@ -125,12 +126,19 @@ fi
 
 wait_for_service_to_activate
 
-print "Phase 2: enabling persistent live webhook sends"
+print "Phase 2: deploying current main with Telegram sends still disabled"
+trigger_deploy
+
+if [ "$CONFIRM_ENABLE_TELEGRAM_SENDS" != "true" ]; then
+  print "Telegram remains disabled. Verify the current deployment and live-event logs, then rerun with CONFIRM_ENABLE_TELEGRAM_SENDS=true to enable sends."
+  exit 0
+fi
+
+print "Phase 3: enabling persistent live webhook sends"
 require_env TELEGRAM_BOT_TOKEN
 require_env TELEGRAM_CHAT_ID
 upsert_env TELEGRAM_BOT_TOKEN "$TELEGRAM_BOT_TOKEN"
 upsert_env TELEGRAM_CHAT_ID "$TELEGRAM_CHAT_ID"
 upsert_env PRIMARY_SENDER_ENABLED true
 upsert_env ENABLE_TELEGRAM_SENDS true
-trigger_deploy
 print "Persistent live webhook enabled for $SERVICE_NAME after $LOYVERSE_REPLAY_CUTOFF_RECEIPT"
