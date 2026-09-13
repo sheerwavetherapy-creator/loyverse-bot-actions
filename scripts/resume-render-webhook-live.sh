@@ -116,6 +116,15 @@ upsert_env LOYVERSE_WEBHOOK_IGNORE_BEFORE "$STARTED_AT"
 render_request POST "/services/$SERVICE_ID/resume"
 case "$RENDER_STATUS" in
   200|201|202|204|409) print "  OK   resume requested (HTTP $RENDER_STATUS)" ;;
+  400)
+    if printf '%s\n' "$RENDER_BODY" | grep -q 'only services suspended by a user can be resumed'; then
+      print "  OK   service is already active"
+    else
+      print "  FAIL resume (HTTP $RENDER_STATUS)"
+      printf '%s\n' "$RENDER_BODY" | head -n10
+      exit 1
+    fi
+    ;;
   *) print "  FAIL resume (HTTP $RENDER_STATUS)"; printf '%s\n' "$RENDER_BODY" | head -n10; exit 1 ;;
 esac
 
