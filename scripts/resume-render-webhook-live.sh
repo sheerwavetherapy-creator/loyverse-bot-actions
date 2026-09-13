@@ -145,6 +145,7 @@ require_env TELEGRAM_CHAT_ID
 upsert_env TELEGRAM_BOT_TOKEN "$TELEGRAM_BOT_TOKEN"
 upsert_env TELEGRAM_CHAT_ID "$TELEGRAM_CHAT_ID"
 upsert_env PRIMARY_SENDER_ENABLED true
+upsert_env LOYVERSE_POLL_RESET_CURSOR_ON_START false
 upsert_env TELEGRAM_KILL_SWITCH false
 upsert_env ENABLE_TELEGRAM_SENDS true
 trigger_deploy
