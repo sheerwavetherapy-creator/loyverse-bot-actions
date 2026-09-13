@@ -32,6 +32,10 @@ ALERT_STATE_FILE = Path(os.environ.get("LOW_STOCK_ALERT_STATE_FILE") or "low_sto
 INVENTORY_TOPIC_ID = "4442209616/1895"
 INVENTORY_TOPIC_URL = "t.me/c/4442209616/1895"
 
+
+class LiveInventoryUnavailable(RuntimeError):
+    """Raised when a live-inventory alert cannot be generated safely."""
+
 # Categories that are explicitly excluded from suggestion prompts.
 SUGGESTION_EXCEPTIONS = {
     "Alcohol": lambda qty, threshold: qty > 20,
@@ -375,7 +379,11 @@ def fetch_loyverse_categories(api_token: str, base_url: str = "https://api.loyve
             req = request.Request(url, headers=headers, method="GET")
             with request.urlopen(req, timeout=30) as response:
                 data = json.loads(response.read().decode("utf-8", errors="replace"))
-        except (error.HTTPError, error.URLError, ValueError, TimeoutError):
+        except error.HTTPError as exc:
+            print(f"[ERROR] Loyverse categories request failed: HTTP {exc.code}", file=sys.stderr)
+            break
+        except (error.URLError, ValueError, TimeoutError) as exc:
+            print(f"[ERROR] Loyverse categories request failed: {exc}", file=sys.stderr)
             break
         if not isinstance(data, dict):
             break
@@ -414,7 +422,11 @@ def fetch_loyverse_items(api_token: str, base_url: str = "https://api.loyverse.c
             req = request.Request(url, headers=headers, method="GET")
             with request.urlopen(req, timeout=30) as response:
                 data = json.loads(response.read().decode("utf-8", errors="replace"))
-        except (error.HTTPError, error.URLError, ValueError, TimeoutError):
+        except error.HTTPError as exc:
+            print(f"[ERROR] Loyverse items request failed: HTTP {exc.code}", file=sys.stderr)
+            break
+        except (error.URLError, ValueError, TimeoutError) as exc:
+            print(f"[ERROR] Loyverse items request failed: {exc}", file=sys.stderr)
             break
 
         if isinstance(data, list):
@@ -457,7 +469,11 @@ def fetch_loyverse_inventory_levels(api_token: str, base_url: str = "https://api
             req = request.Request(url, headers=headers, method="GET")
             with request.urlopen(req, timeout=30) as response:
                 data = json.loads(response.read().decode("utf-8", errors="replace"))
-        except (error.HTTPError, error.URLError, ValueError, TimeoutError):
+        except error.HTTPError as exc:
+            print(f"[ERROR] Loyverse inventory request failed: HTTP {exc.code}", file=sys.stderr)
+            break
+        except (error.URLError, ValueError, TimeoutError) as exc:
+            print(f"[ERROR] Loyverse inventory request failed: {exc}", file=sys.stderr)
             break
         if not isinstance(data, dict):
             break
@@ -526,18 +542,21 @@ def select_eligible_low_stock_items(csv_path: str | os.PathLike[str] | None = No
     if api_token:
         resolved_base_url = base_url or "https://api.loyverse.com/v1.0"
         rows = fetch_loyverse_items(api_token, resolved_base_url)
-        if rows:
-            print(f"[DEBUG] Fetched {len(rows)} items from Loyverse API", file=sys.stderr)
-            inventory_levels = fetch_loyverse_inventory_levels(api_token, resolved_base_url)
-            print(f"[DEBUG] Fetched {len(inventory_levels)} live inventory levels from Loyverse API", file=sys.stderr)
-            rows = apply_live_inventory_quantities(rows, inventory_levels)
-            merged = merge_api_rows_with_thresholds(rows, csv_path)
-            print(f"[DEBUG] {len(merged)} items have thresholds after merge", file=sys.stderr)
-            # Check if merged rows have quantity data; if not, fall back to CSV
-            has_quantity = any(str(row.get("quantity") or "").strip() for row in merged)
-            if has_quantity:
-                return merged
-            print("[DEBUG] API items lack quantity data; falling back to CSV for inventory", file=sys.stderr)
+        if not rows:
+            raise LiveInventoryUnavailable(
+                "Loyverse returned no usable items; refusing to post quantities from the static CSV export."
+            )
+        print(f"[DEBUG] Fetched {len(rows)} items from Loyverse API", file=sys.stderr)
+        inventory_levels = fetch_loyverse_inventory_levels(api_token, resolved_base_url)
+        if not inventory_levels:
+            raise LiveInventoryUnavailable(
+                "Loyverse returned no live inventory levels; refusing to post quantities from the static CSV export."
+            )
+        print(f"[DEBUG] Fetched {len(inventory_levels)} live inventory levels from Loyverse API", file=sys.stderr)
+        rows = apply_live_inventory_quantities(rows, inventory_levels)
+        merged = merge_api_rows_with_thresholds(rows, csv_path)
+        print(f"[DEBUG] {len(merged)} items have thresholds after merge", file=sys.stderr)
+        return merged
 
     rows = parse_export_csv(csv_path) if csv_path else []
     print(f"[DEBUG] Parsed {len(rows)} rows from CSV", file=sys.stderr)
@@ -794,7 +813,11 @@ def main() -> int:
         csv_path = "export_items-11.csv" if Path("export_items-11.csv").exists() else None
     api_token = os.environ.get("LOYVERSE_API_TOKEN")
     base_url = os.environ.get("LOYVERSE_API_BASE_URL") or "https://api.loyverse.com/v1.0"
-    message = build_daily_low_stock_message(csv_path, api_token=api_token, base_url=base_url)
+    try:
+        message = build_daily_low_stock_message(csv_path, api_token=api_token, base_url=base_url)
+    except LiveInventoryUnavailable as exc:
+        print(f"[ERROR] {exc}", file=sys.stderr)
+        return 1
     print(message)
 
     if os.environ.get("SEND_TELEGRAM_MESSAGE", "false").lower() in {"1", "true", "yes"}:

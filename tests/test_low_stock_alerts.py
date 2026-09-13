@@ -3,6 +3,7 @@ from pathlib import Path
 from unittest import mock
 
 from scripts.low_stock_alerts import (
+    LiveInventoryUnavailable,
     build_alert_block,
     build_suggestion_block,
     get_latest_topic_timestamp,
@@ -13,6 +14,7 @@ from scripts.low_stock_alerts import (
     parse_threshold_value,
     format_quantity,
     send_low_stock_alert,
+    select_eligible_low_stock_items,
     set_latest_topic_timestamp,
 )
 from scripts.telegram_lowstock_bot import is_lowstock_command
@@ -46,6 +48,23 @@ def test_parse_export_csv_reads_location_suffixed_stock_headers(tmp_path):
     assert rows[0]["item_name"] == "Bottled Water, 10L"
     assert rows[0]["quantity"] == "4.000"
     assert rows[0]["threshold"] == Decimal("4.000")
+
+
+def test_live_inventory_failure_never_falls_back_to_static_csv_quantities(tmp_path):
+    csv_path = tmp_path / "export_items-11.csv"
+    csv_path.write_text(
+        "Name,Category,Quantity,Low Stock Alert Threshold\n"
+        '"Bottled Water, 10L",Maji,4,4\n',
+        encoding="utf-8",
+    )
+
+    with mock.patch("scripts.low_stock_alerts.fetch_loyverse_items", return_value=[]):
+        try:
+            select_eligible_low_stock_items(csv_path, api_token="loyverse-token")
+        except LiveInventoryUnavailable:
+            pass
+        else:
+            raise AssertionError("Expected live inventory failure instead of CSV fallback")
 
 
 def test_format_quantity_removes_inventory_decimal_padding():
