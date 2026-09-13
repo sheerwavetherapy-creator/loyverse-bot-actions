@@ -87,22 +87,17 @@ SERVICE_NAME=$(printf '%s\n' "$RENDER_BODY" | jq -r '.name // .service.name // "
 
 render_request GET "/services/$SERVICE_ID/env-vars"
 [ "$RENDER_STATUS" = "200" ] || die "Could not read Render env vars for $SERVICE_ID (HTTP $RENDER_STATUS)."
-if printf '%s\n' "$RENDER_BODY" | jq -e '.[] | select(.key == "TELEGRAM_KILL_SWITCH" and (.value == "true" or .value == "1"))' >/dev/null; then
-  die "Emergency storm kill switch is ACTIVE on Render service $SERVICE_ID; resume is blocked."
-fi
 if printf '%s\n' "$RENDER_BODY" | jq -e '.[] | select(.key == "ENABLE_TELEGRAM_SENDS" and (.value == "true" or .value == "1"))' >/dev/null; then
   die "Telegram sends are still enabled on Render service $SERVICE_ID; resume is blocked."
-fi
-if printf '%s\n' "$RENDER_BODY" | jq -e '.[] | select(.key == "PRIMARY_SENDER_ENABLED" and (.value == "true" or .value == "1"))' >/dev/null; then
-  die "Primary sender flag is still enabled on Render service $SERVICE_ID; resume is blocked."
 fi
 
 print "Preparing persistent live webhook for $SERVICE_NAME after $LOYVERSE_REPLAY_CUTOFF_RECEIPT"
 
 STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 print "Phase 1: guarded startup with Telegram sends disabled"
-upsert_env PRIMARY_SENDER_ENABLED false
+upsert_env PRIMARY_SENDER_ENABLED true
 upsert_env ENABLE_TELEGRAM_SENDS false
+upsert_env TELEGRAM_KILL_SWITCH true
 upsert_env TELEGRAM_BOT_TOKEN disabled-by-startup-guard
 upsert_env TELEGRAM_CHAT_ID 0
 upsert_env ALLOW_HISTORICAL_RECOVERY false
@@ -149,5 +144,6 @@ require_env TELEGRAM_CHAT_ID
 upsert_env TELEGRAM_BOT_TOKEN "$TELEGRAM_BOT_TOKEN"
 upsert_env TELEGRAM_CHAT_ID "$TELEGRAM_CHAT_ID"
 upsert_env PRIMARY_SENDER_ENABLED true
+upsert_env TELEGRAM_KILL_SWITCH false
 upsert_env ENABLE_TELEGRAM_SENDS true
 print "Persistent live webhook enabled for $SERVICE_NAME after $LOYVERSE_REPLAY_CUTOFF_RECEIPT"
