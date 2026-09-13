@@ -146,4 +146,5 @@ upsert_env TELEGRAM_CHAT_ID "$TELEGRAM_CHAT_ID"
 upsert_env PRIMARY_SENDER_ENABLED true
 upsert_env TELEGRAM_KILL_SWITCH false
 upsert_env ENABLE_TELEGRAM_SENDS true
+trigger_deploy
 print "Persistent live webhook enabled for $SERVICE_NAME after $LOYVERSE_REPLAY_CUTOFF_RECEIPT"
