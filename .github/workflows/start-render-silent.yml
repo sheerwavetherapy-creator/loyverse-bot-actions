@@ -1,0 +1,90 @@
+name: Start Render Poller Silently
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type START_SILENT to start polling with Telegram sends disabled."
+        required: true
+        default: "NO"
+
+jobs:
+  start-silent:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require explicit silent-start confirmation
+        env:
+          CONFIRM: ${{ github.event.inputs.confirm }}
+        run: |
+          if [[ "$CONFIRM" != "START_SILENT" ]]; then
+            echo "Confirmation was not START_SILENT; no changes made."
+            exit 1
+          fi
+
+      - name: Restore polling with all Telegram sends blocked
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          SERVICE_ID="srv-d9ib0rn41pts73av4fh0"
+          API_BASE="https://api.render.com/v1"
+          AUTH="Authorization: Bearer $RENDER_API_KEY"
+          SERVICE_JSON="$(curl -fsS -H "$AUTH" "$API_BASE/services/$SERVICE_ID")"
+          SERVICE_NAME="$(jq -r '.name // .service.name // "unknown"' <<< "$SERVICE_JSON")"
+          if [[ "$SERVICE_NAME" != "loyverse-telegram-notifier" ]]; then
+            echo "Refusing to modify unexpected Render service."
+            exit 1
+          fi
+
+          STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          set_env() {
+            local key="$1"
+            local value="$2"
+            local status
+            status="$(curl -sS -o /dev/null -w '%{http_code}' -X PUT \
+              -H "$AUTH" -H 'Content-Type: application/json' \
+              -d "$(jq -nc --arg value "$value" '{value: $value}')" \
+              "$API_BASE/services/$SERVICE_ID/env-vars/$key")"
+            if [[ "$status" != "200" && "$status" != "201" ]]; then
+              echo "Failed to set $key (HTTP $status)."
+              return 1
+            fi
+            echo "Set $key."
+          }
+
+          set_env PRIMARY_SENDER_ENABLED true
+          set_env ENABLE_TELEGRAM_SENDS false
+          set_env TELEGRAM_KILL_SWITCH true
+          set_env TELEGRAM_BOT_TOKEN disabled-by-silent-start
+          set_env TELEGRAM_CHAT_ID 0
+          set_env LOYVERSE_IGNORE_EVENTS_BEFORE "$STARTED_AT"
+          set_env LOYVERSE_WEBHOOK_IGNORE_BEFORE "$STARTED_AT"
+          set_env LOYVERSE_LIVE_START_TIME "$STARTED_AT"
+          set_env LOYVERSE_POLL_STARTUP_RECEIPT_CUTOFF 1-5726
+          set_env LOYVERSE_POLL_STATE_FILE /var/data/loyverse-poller-state.json
+          set_env LOYVERSE_POLL_RESET_CURSOR_ON_START true
+          set_env LOYVERSE_POLL_RECONCILE_ENABLED false
+          set_env LOYVERSE_POLL_STARTUP_RECONCILE_ENABLED false
+          set_env LOYVERSE_POLL_GAP_RECOVERY_ENABLED false
+          set_env LOYVERSE_POLL_PARITY_AUDIT_ENABLED false
+          set_env ALLOW_HISTORICAL_RECOVERY false
+          set_env ALLOW_HISTORICAL_POSTS false
+
+          RESUME_STATUS="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
+            -H "$AUTH" "$API_BASE/services/$SERVICE_ID/resume")"
+          if [[ "$RESUME_STATUS" != "200" && "$RESUME_STATUS" != "201" && "$RESUME_STATUS" != "202" && "$RESUME_STATUS" != "204" && "$RESUME_STATUS" != "409" ]]; then
+            echo "Failed to resume service (HTTP $RESUME_STATUS)."
+            exit 1
+          fi
+          echo "Resume requested with Telegram sends disabled and historical replay blocked."
+
+          DEPLOY_STATUS="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
+            -H "$AUTH" -H 'Content-Type: application/json' \
+            -d '{"clearCache":"do_not_clear"}' \
+            "$API_BASE/services/$SERVICE_ID/deploys")"
+          if [[ "$DEPLOY_STATUS" != "200" && "$DEPLOY_STATUS" != "201" && "$DEPLOY_STATUS" != "202" ]]; then
+            echo "Failed to deploy current main (HTTP $DEPLOY_STATUS)."
+            exit 1
+          fi
+          echo "Current main deployment requested. Telegram remains disabled."
