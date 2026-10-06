@@ -1,0 +1,107 @@
+name: Enable Render Live Sends Safely
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type ENABLE_LIVE to enable new-event Telegram notifications."
+        required: true
+        default: "NO"
+
+jobs:
+  enable-live:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require explicit live-send confirmation
+        env:
+          CONFIRM: ${{ github.event.inputs.confirm }}
+        run: |
+          if [[ "$CONFIRM" != "ENABLE_LIVE" ]]; then
+            echo "Confirmation was not ENABLE_LIVE; no changes made."
+            exit 1
+          fi
+
+      - name: Verify fresh baseline and enable only live sends
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_PAYINPAYOUT_TOPIC_ID: ${{ secrets.TELEGRAM_PAYINPAYOUT_TOPIC_ID }}
+        run: |
+          set -euo pipefail
+
+          SERVICE_ID="srv-d9ib0rn41pts73av4fh0"
+          API_BASE="https://api.render.com/v1"
+          AUTH="Authorization: Bearer $RENDER_API_KEY"
+          HEALTH="$(curl -fsS https://loyverse-telegram-notifier.onrender.com/health)"
+          STATE="$(curl -fsS https://loyverse-telegram-notifier.onrender.com/__debug_poller)"
+
+          if [[ "$(jq -r '.ok' <<< "$HEALTH")" != "true" || "$(jq -r '.commit' <<< "$HEALTH")" != "b1973b0" ]]; then
+            echo "Refusing to enable sends: expected guarded production commit is not healthy."
+            exit 1
+          fi
+          if [[ "$(jq -r '.state.receiptBootstrapCutoff' <<< "$STATE")" != "1-5726" \
+            || "$(jq -r '.state.openedShiftsInitialized' <<< "$STATE")" != "true" \
+            || "$(jq -r '(.state.seenReceiptKeys | length)' <<< "$STATE")" != "1" \
+            || "$(jq -r '(.state.seenOpenedShiftKeys | length)' <<< "$STATE")" != "0" \
+            || "$(jq -r '(.state.seenShiftKeys | length)' <<< "$STATE")" != "0" \
+            || "$(jq -r '(.state.seenShiftCashMovementKeys | length)' <<< "$STATE")" != "0" \
+            || "$(jq -r '(.state.seenCashManagementKeys | length)' <<< "$STATE")" != "0" \
+            || "$(jq -r '(.state.activeShiftRefs | length)' <<< "$STATE")" != "0" ]]; then
+            echo "Refusing to enable sends: poller is not at the expected quiet 1-5726 baseline."
+            exit 1
+          fi
+
+          WATERMARK="$(jq -r '.state.lastCreatedAt' <<< "$STATE")"
+          WATERMARK_SECONDS="$(date -u -d "$WATERMARK" +%s)"
+          NOW_SECONDS="$(date -u +%s)"
+          WATERMARK_AGE=$((NOW_SECONDS - WATERMARK_SECONDS))
+          if (( WATERMARK_AGE < 0 || WATERMARK_AGE > 600 )); then
+            echo "Refusing to enable sends: poller watermark is not fresh."
+            exit 1
+          fi
+
+          ENV_VARS="$(curl -fsS -H "$AUTH" "$API_BASE/services/$SERVICE_ID/env-vars")"
+          env_value() {
+            jq -r --arg key "$1" '.[] | (.envVar // .) | select(.key == $key) | .value // empty' <<< "$ENV_VARS"
+          }
+          if [[ "$(env_value ENABLE_TELEGRAM_SENDS)" != "false" \
+            || "$(env_value TELEGRAM_KILL_SWITCH)" != "true" \
+            || "$(env_value PRIMARY_SENDER_ENABLED)" != "true" \
+            || "$(env_value LOYVERSE_POLL_STATE_FILE)" != "/var/data/loyverse-poller-state.json" ]]; then
+            echo "Refusing to enable sends: Render is not in the expected guarded configuration."
+            exit 1
+          fi
+
+          set_env() {
+            local key="$1"
+            local value="$2"
+            local status
+            status="$(curl -sS -o /dev/null -w '%{http_code}' -X PUT \
+              -H "$AUTH" -H 'Content-Type: application/json' \
+              -d "$(jq -nc --arg value "$value" '{value: $value}')" \
+              "$API_BASE/services/$SERVICE_ID/env-vars/$key")"
+            if [[ "$status" != "200" && "$status" != "201" ]]; then
+              echo "Failed to set $key (HTTP $status)."
+              return 1
+            fi
+            echo "Set $key."
+          }
+
+          set_env TELEGRAM_BOT_TOKEN "$TELEGRAM_BOT_TOKEN"
+          set_env TELEGRAM_CHAT_ID "$TELEGRAM_CHAT_ID"
+          set_env TELEGRAM_PAYINPAYOUT_TOPIC_ID "$TELEGRAM_PAYINPAYOUT_TOPIC_ID"
+          set_env LOYVERSE_POLL_RESET_CURSOR_ON_START false
+          set_env PRIMARY_SENDER_ENABLED true
+          set_env ENABLE_TELEGRAM_SENDS true
+          set_env TELEGRAM_KILL_SWITCH false
+
+          DEPLOY_STATUS="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
+            -H "$AUTH" -H 'Content-Type: application/json' \
+            -d '{"clearCache":"do_not_clear"}' \
+            "$API_BASE/services/$SERVICE_ID/deploys")"
+          if [[ "$DEPLOY_STATUS" != "200" && "$DEPLOY_STATUS" != "201" && "$DEPLOY_STATUS" != "202" ]]; then
+            echo "Live deploy request failed (HTTP $DEPLOY_STATUS)."
+            exit 1
+          fi
+          echo "Live sends enabled after the quiet baseline; only events after the persisted start boundary are eligible."
