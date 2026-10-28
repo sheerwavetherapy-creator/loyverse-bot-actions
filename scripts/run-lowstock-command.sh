@@ -3,6 +3,7 @@
 set -euo pipefail
 
 : "${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN is required}"
+: "${LOYVERSE_API_TOKEN:?LOYVERSE_API_TOKEN is required for live inventory}"
 : "${TELEGRAM_COMMAND_OFFSET_FILE:?TELEGRAM_COMMAND_OFFSET_FILE must point to persistent storage}"
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)

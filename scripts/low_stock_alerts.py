@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Low stock alert helpers for Loyverse inventory updates.
 
-This module implements the workflow described for a restored low stock alert feature:
-- load item/export data from a CSV file
-- filter to eligible items with a non-empty threshold in column U
-- calculate alerts and suggestion blocks for Telegram
-- group by category alphabetically for stable output
+With LOYVERSE_API_TOKEN, thresholds come from variants[].stores[].low_stock
+and quantities from /inventory, joined by (variant_id, store_id). CSV values
+are used only in explicit offline mode (no API token). An incomplete live read
+fails without replacing the previous alert. Telegram alerts are grouped by
+category and split into messages when necessary.
+
+API schema: https://developer.loyverse.com/docs/API-Reference__v1.0.yaml
 """
 
 from __future__ import annotations
@@ -19,9 +21,11 @@ import time
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
+from html import escape
 from pathlib import Path
 from typing import Any, Iterable
 from urllib import request, error
+from urllib.parse import urlencode
 
 STATE_FILE = Path.home() / ".telegram_state.json"
 
@@ -81,7 +85,8 @@ def parse_threshold_value(value: Any) -> Decimal | None:
     if not text:
         return None
     try:
-        return Decimal(text)
+        number = Decimal(text)
+        return number if number.is_finite() else None
     except InvalidOperation:
         return None
 
@@ -240,13 +245,13 @@ def build_alert_block(rows: Iterable[dict[str, Any]]) -> str:
             grouped[category],
             key=lambda row: normalize_name(row["item_name"]),
         )
-        lines.append(category.upper())
+        lines.append(escape(category.upper()))
         for row in items:
             cost = row.get("cost")
             qty = row.get("quantity")
             item_name = str(row["item_name"]).strip()
             lines.append(
-                f"{item_name} | PC: {format_money(cost)} KSh | QTY: {format_quantity(qty)}"
+                f"{escape(item_name)} | PC: {escape(format_money(cost))} KSh | QTY: {format_quantity(qty)}"
             )
         lines.append("")
     return "\n".join(lines).strip()
@@ -283,280 +288,171 @@ def build_suggestion_block(rows: Iterable[dict[str, Any]]) -> str:
         qty = row.get("quantity")
         threshold = row.get("threshold")
         lines.append(
-            f"{row['item_name']} | Category: {category} | Qty: {qty} | Threshold: {threshold}"
+            f"{escape(str(row['item_name']))} | Category: {escape(category)} | Qty: {qty} | Threshold: {threshold}"
         )
     return "\n".join(lines)
 
 
-def threshold_lookup_from_csv(csv_path: str | os.PathLike[str]) -> dict[str, Decimal]:
-    lookup: dict[str, Decimal] = {}
-    for row in parse_export_csv(csv_path):
-        threshold = row.get("threshold")
-        if threshold is None:
-            continue
-        name = normalize_name(row.get("item_name"))
-        category = normalize_name(row.get("category"))
-        if name:
-            lookup[f"name::{name}"] = threshold
-        if name and category:
-            lookup[f"name-cat::{name}::{category}"] = threshold
-    return lookup
-
-
-def normalize_api_row(raw: dict[str, Any], category_map: dict[str, str] | None = None) -> dict[str, Any]:
-    name = first_non_empty(
-        raw.get("name"),
-        raw.get("item_name"),
-        raw.get("title"),
-        raw.get("product_name"),
-    )
-    category = first_non_empty(
-        raw.get("category"),
-        raw.get("category_name"),
-        raw.get("categoryName"),
-        raw.get("item_category"),
-    )
-    if isinstance(category, dict):
-        category = category.get("name") or category.get("title") or category.get("category")
-    category_id = first_non_empty(raw.get("category_id"), raw.get("categoryId"))
-    if category is None and category_id is not None and category_map:
-        category = category_map.get(str(category_id))
-    quantity = first_non_empty(
-        raw.get("quantity"),
-        raw.get("stock"),
-        raw.get("available_quantity"),
-        raw.get("quantity_in_stock"),
-        raw.get("on_hand"),
-    )
-    if isinstance(raw.get("inventory"), dict):
-        inv = raw["inventory"]
-        quantity = first_non_empty(quantity, inv.get("quantity"), inv.get("stock"), inv.get("available_quantity"))
-    if isinstance(raw.get("stock"), dict):
-        stock = raw["stock"]
-        quantity = first_non_empty(quantity, stock.get("quantity"), stock.get("on_hand"), stock.get("available"))
-    if name is None:
-        return {}
-
-    # Loyverse nests cost and variant identifiers per-variant rather than on the item itself.
-    variant_ids: list[str] = []
-    cost = first_non_empty(raw.get("cost"), raw.get("purchaseCost"), raw.get("purchase_cost"))
-    variants = raw.get("variants")
-    if isinstance(variants, list):
-        for variant in variants:
-            if not isinstance(variant, dict):
-                continue
-            variant_id = first_non_empty(variant.get("variant_id"), variant.get("id"))
-            if variant_id is not None:
-                variant_ids.append(str(variant_id))
-            if cost is None:
-                cost = first_non_empty(
-                    variant.get("cost"),
-                    variant.get("purchase_cost"),
-                    variant.get("default_price"),
-                )
-    return {
-        "item_name": str(name).strip(),
-        "category": str(category or "Uncategorized").strip(),
-        "cost": str(cost).strip() if cost is not None else "",
-        "quantity": str(quantity).strip() if quantity is not None else "",
-        "variant_ids": variant_ids,
+def fetch_loyverse_pages(api_token: str, base_url: str, resource: str, result_key: str) -> list[dict[str, Any]]:
+    """Read every page or fail: a partial catalog must never replace a complete alert."""
+    headers = {
+        "Authorization": f"Bearer {api_token}",
+        "Accept": "application/json",
     }
+    entries: list[dict[str, Any]] = []
+    cursor: str | None = None
+    seen_cursors: set[str] = set()
+    for _ in range(200):
+        params = {"limit": "250"}
+        if cursor:
+            params["cursor"] = cursor
+        url = f"{base_url.rstrip('/')}/{resource}?{urlencode(params)}"
+        try:
+            req = request.Request(url, headers=headers, method="GET")
+            with request.urlopen(req, timeout=30) as response:
+                data = json.loads(response.read().decode("utf-8", errors="replace"))
+        except error.HTTPError as exc:
+            raise LiveInventoryUnavailable(f"Loyverse {resource} request failed: HTTP {exc.code}") from exc
+        except (error.URLError, ValueError, TimeoutError) as exc:
+            raise LiveInventoryUnavailable(f"Loyverse {resource} request failed ({type(exc).__name__})") from exc
+        if not isinstance(data, dict) or not isinstance(data.get(result_key), list):
+            raise LiveInventoryUnavailable(f"Loyverse {resource} returned an invalid response")
+        page = data[result_key]
+        if any(not isinstance(entry, dict) for entry in page):
+            raise LiveInventoryUnavailable(f"Loyverse {resource} returned an invalid entry")
+        entries.extend(page)
+        cursor = data.get("cursor")
+        if not cursor:
+            return entries
+        if not isinstance(cursor, str) or cursor in seen_cursors:
+            raise LiveInventoryUnavailable(f"Loyverse {resource} returned an invalid or repeated cursor")
+        seen_cursors.add(cursor)
+    raise LiveInventoryUnavailable(f"Loyverse {resource} exceeded the pagination safety limit")
 
 
 def fetch_loyverse_categories(api_token: str, base_url: str = "https://api.loyverse.com/v1.0") -> dict[str, str]:
-    """Fetch the category_id -> name mapping (the /items endpoint only returns category_id)."""
-    headers = {
-        "Authorization": f"Bearer {api_token}",
-        "Accept": "application/json",
-        "Content-Type": "application/json",
+    entries = fetch_loyverse_pages(api_token, base_url, "categories", "categories")
+    return {str(entry["id"]): str(entry["name"]) for entry in entries if entry.get("id") and entry.get("name")}
+
+
+def fetch_loyverse_stores(api_token: str, base_url: str = "https://api.loyverse.com/v1.0") -> dict[str, str]:
+    """Active (non-deleted) stores; overrides for deleted stores are ignored."""
+    entries = fetch_loyverse_pages(api_token, base_url, "stores", "stores")
+    return {
+        str(entry["id"]): str(entry.get("name") or entry["id"])
+        for entry in entries
+        if entry.get("id") and not entry.get("deleted_at")
     }
-    names: dict[str, str] = {}
-    cursor: str | None = None
-    base = f"{base_url.rstrip('/')}/categories"
-    for _ in range(50):  # safety cap against runaway pagination
-        url = f"{base}?limit=250" + (f"&cursor={cursor}" if cursor else "")
-        try:
-            req = request.Request(url, headers=headers, method="GET")
-            with request.urlopen(req, timeout=30) as response:
-                data = json.loads(response.read().decode("utf-8", errors="replace"))
-        except error.HTTPError as exc:
-            print(f"[ERROR] Loyverse categories request failed: HTTP {exc.code}", file=sys.stderr)
-            break
-        except (error.URLError, ValueError, TimeoutError) as exc:
-            print(f"[ERROR] Loyverse categories request failed: {exc}", file=sys.stderr)
-            break
-        if not isinstance(data, dict):
-            break
-        entries = data.get("categories") or data.get("data") or []
-        if not isinstance(entries, list):
-            break
-        for entry in entries:
-            if not isinstance(entry, dict):
-                continue
-            category_id = first_non_empty(entry.get("id"), entry.get("category_id"))
-            name = first_non_empty(entry.get("name"), entry.get("category_name"))
-            if category_id is not None and name is not None:
-                names[str(category_id)] = str(name)
-        cursor = data.get("cursor")
-        if not cursor:
-            break
-    return names
 
 
 def fetch_loyverse_items(api_token: str, base_url: str = "https://api.loyverse.com/v1.0") -> list[dict[str, Any]]:
-    headers = {
-        "Authorization": f"Bearer {api_token}",
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-    }
-    resolved_base_url = base_url or "https://api.loyverse.com/v1.0"
-    category_map = fetch_loyverse_categories(api_token, resolved_base_url)
-    print(f"[DEBUG] Fetched {len(category_map)} categories from Loyverse API", file=sys.stderr)
+    return fetch_loyverse_pages(api_token, base_url, "items", "items")
 
+
+def normalize_api_rows(
+    raw: dict[str, Any],
+    category_map: dict[str, str],
+    store_names: dict[str, str] | None = None,
+) -> list[dict[str, Any]]:
+    """Keep variant/store thresholds separate; stock elsewhere cannot cover a shortage."""
+    if raw.get("deleted_at") or not raw.get("track_stock"):
+        return []
+    # Composite items without production hold no stock of their own; their components are tracked.
+    if raw.get("is_composite") and not raw.get("use_production"):
+        return []
+    name = raw.get("item_name")
+    variants = raw.get("variants")
+    if not name or not isinstance(variants, list):
+        raise LiveInventoryUnavailable("Loyverse returned a tracked item without a name or variants")
     rows: list[dict[str, Any]] = []
-    cursor: str | None = None
-    base = f"{resolved_base_url.rstrip('/')}/items"
-    for _ in range(200):  # safety cap against runaway pagination
-        url = f"{base}?limit=250" + (f"&cursor={cursor}" if cursor else "")
-        try:
-            req = request.Request(url, headers=headers, method="GET")
-            with request.urlopen(req, timeout=30) as response:
-                data = json.loads(response.read().decode("utf-8", errors="replace"))
-        except error.HTTPError as exc:
-            print(f"[ERROR] Loyverse items request failed: HTTP {exc.code}", file=sys.stderr)
-            break
-        except (error.URLError, ValueError, TimeoutError) as exc:
-            print(f"[ERROR] Loyverse items request failed: {exc}", file=sys.stderr)
-            break
-
-        if isinstance(data, list):
-            payload = data
-            cursor = None
-        elif isinstance(data, dict):
-            payload = data.get("items") or data.get("data") or data.get("results") or []
-            cursor = data.get("cursor")
-        else:
-            break
-
-        if isinstance(payload, list):
-            for item in payload:
-                if isinstance(item, dict):
-                    normalized = normalize_api_row(item, category_map)
-                    if normalized:
-                        rows.append(normalized)
-        if not cursor:
-            break
+    for variant in variants:
+        if not isinstance(variant, dict):
+            raise LiveInventoryUnavailable(f"Loyverse returned an invalid variant for {name}")
+        if variant.get("deleted_at"):
+            continue
+        stores = variant.get("stores")
+        if not isinstance(stores, list) or any(not isinstance(store, dict) for store in stores):
+            raise LiveInventoryUnavailable(f"Loyverse returned invalid stores for {name}")
+        options = [str(variant[f"option{i}_value"]) for i in range(1, 4) if variant.get(f"option{i}_value")]
+        label = f"{name} ({', '.join(options)})" if options else str(name)
+        if len(variants) > 1 and not options:
+            label = f"{name} ({variant.get('sku') or variant.get('variant_id')})"
+        if store_names is not None:
+            stores = [store for store in stores if str(store.get("store_id")) in store_names]
+        for store in stores:
+            if store.get("low_stock") is None:
+                continue
+            threshold = parse_threshold_value(store["low_stock"])
+            if threshold is None or threshold < 0:
+                raise LiveInventoryUnavailable(f"Loyverse returned an invalid low-stock threshold for {label}")
+            variant_id, store_id = variant.get("variant_id"), store.get("store_id")
+            if not variant_id or not store_id:
+                raise LiveInventoryUnavailable(f"Loyverse returned missing variant/store identifiers for {label}")
+            store_label = (store_names or {}).get(str(store_id), store_id)
+            rows.append({
+                "item_name": f"{label} [store: {store_label}]" if len(stores) > 1 else label,
+                "category": category_map.get(str(raw.get("category_id")), "Uncategorized"),
+                "cost": str(variant["cost"]) if variant.get("cost") is not None else "",
+                "variant_id": str(variant_id),
+                "store_id": str(store_id),
+                "threshold": threshold,
+            })
     return rows
 
 
-def fetch_loyverse_inventory_levels(api_token: str, base_url: str = "https://api.loyverse.com/v1.0") -> dict[str, Decimal]:
-    """Fetch live stock levels keyed by variant_id from the /inventory endpoint.
-
-    The /items endpoint does not include on-hand quantity, so quantity must come from
-    here to avoid relying on the (potentially stale) committed CSV export for stock counts.
-    """
-    headers = {
-        "Authorization": f"Bearer {api_token}",
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-    }
-    levels: dict[str, Decimal] = {}
-    cursor: str | None = None
-    base = f"{base_url.rstrip('/')}/inventory"
-    for _ in range(50):  # safety cap against runaway pagination
-        url = f"{base}?limit=250" + (f"&cursor={cursor}" if cursor else "")
-        try:
-            req = request.Request(url, headers=headers, method="GET")
-            with request.urlopen(req, timeout=30) as response:
-                data = json.loads(response.read().decode("utf-8", errors="replace"))
-        except error.HTTPError as exc:
-            print(f"[ERROR] Loyverse inventory request failed: HTTP {exc.code}", file=sys.stderr)
-            break
-        except (error.URLError, ValueError, TimeoutError) as exc:
-            print(f"[ERROR] Loyverse inventory request failed: {exc}", file=sys.stderr)
-            break
-        if not isinstance(data, dict):
-            break
-        entries = data.get("inventory_levels") or data.get("data") or []
-        if not isinstance(entries, list):
-            break
-        for entry in entries:
-            if not isinstance(entry, dict):
-                continue
-            variant_id = first_non_empty(entry.get("variant_id"), entry.get("id"))
-            in_stock = first_non_empty(entry.get("in_stock"), entry.get("quantity"), entry.get("stock"))
-            if variant_id is None or in_stock is None:
-                continue
-            qty = parse_threshold_value(in_stock)
-            if qty is None:
-                continue
-            key = str(variant_id)
-            levels[key] = levels.get(key, Decimal(0)) + qty
-        cursor = data.get("cursor")
-        if not cursor:
-            break
+def fetch_loyverse_inventory_levels(api_token: str, base_url: str = "https://api.loyverse.com/v1.0") -> dict[tuple[str, str], Decimal]:
+    entries = fetch_loyverse_pages(api_token, base_url, "inventory", "inventory_levels")
+    levels: dict[tuple[str, str], Decimal] = {}
+    for entry in entries:
+        variant_id, store_id = entry.get("variant_id"), entry.get("store_id")
+        qty = parse_threshold_value(entry.get("in_stock"))
+        if not variant_id or not store_id or qty is None:
+            raise LiveInventoryUnavailable("Loyverse returned an invalid inventory level")
+        key = (str(variant_id), str(store_id))
+        if key in levels:
+            raise LiveInventoryUnavailable("Loyverse returned duplicate inventory levels")
+        levels[key] = qty
     return levels
 
 
-def merge_api_rows_with_thresholds(api_rows: Iterable[dict[str, Any]], csv_path: str | os.PathLike[str] | None = None) -> list[dict[str, Any]]:
-    threshold_map = threshold_lookup_from_csv(csv_path) if csv_path else {}
-    print(f"[DEBUG] Loaded {len(threshold_map)} thresholds from CSV", file=sys.stderr)
-    merged: list[dict[str, Any]] = []
-    for row in api_rows:
-        name = normalize_name(row.get("item_name"))
-        category = normalize_name(row.get("category"))
-        threshold = None
-        if name and f"name-cat::{name}::{category}" in threshold_map:
-            threshold = threshold_map[f"name-cat::{name}::{category}"]
-        elif name and f"name::{name}" in threshold_map:
-            threshold = threshold_map[f"name::{name}"]
-        if threshold is None:
-            continue
-        candidate = dict(row)
-        candidate["threshold"] = threshold
-        merged.append(candidate)
-        print(f"[DEBUG] Merged {name} with threshold {threshold}", file=sys.stderr)
-    return merged
-
-
-def apply_live_inventory_quantities(rows: list[dict[str, Any]], inventory_levels: dict[str, Decimal]) -> list[dict[str, Any]]:
-    """Overwrite each row's quantity with the live stock level for its variant(s), when known."""
-    if not inventory_levels:
-        return rows
+def apply_live_inventory_quantities(rows: list[dict[str, Any]], inventory_levels: dict[tuple[str, str], Decimal]) -> list[dict[str, Any]]:
+    """Join on (variant_id, store_id). The inventory read is already complete (every page
+    fetched), so a tracked variant with no level has never been stocked: Loyverse shows 0."""
     updated: list[dict[str, Any]] = []
     for row in rows:
-        candidate = dict(row)
-        variant_ids = row.get("variant_ids") or []
-        total = None
-        for variant_id in variant_ids:
-            level = inventory_levels.get(str(variant_id))
-            if level is not None:
-                total = (total or Decimal(0)) + level
-        if total is not None:
-            candidate["quantity"] = format_quantity(total)
-        updated.append(candidate)
+        key = (row["variant_id"], row["store_id"])
+        level = inventory_levels.get(key)
+        if level is None:
+            print(
+                f"[WARN] No Loyverse inventory level for {row['item_name']} at store {row['store_id']}; treating as 0",
+                file=sys.stderr,
+            )
+            level = Decimal(0)
+        updated.append({**row, "quantity": format_quantity(level)})
     return updated
 
 
 def select_eligible_low_stock_items(csv_path: str | os.PathLike[str] | None = None, api_token: str | None = None, base_url: str | None = None) -> list[dict[str, Any]]:
     if api_token:
         resolved_base_url = base_url or "https://api.loyverse.com/v1.0"
-        rows = fetch_loyverse_items(api_token, resolved_base_url)
-        if not rows:
+        items = fetch_loyverse_items(api_token, resolved_base_url)
+        if not items:
             raise LiveInventoryUnavailable(
                 "Loyverse returned no usable items; refusing to post quantities from the static CSV export."
             )
-        print(f"[DEBUG] Fetched {len(rows)} items from Loyverse API", file=sys.stderr)
+        category_map = fetch_loyverse_categories(api_token, resolved_base_url)
+        store_names = fetch_loyverse_stores(api_token, resolved_base_url)
+        if not store_names:
+            raise LiveInventoryUnavailable("Loyverse returned no active stores")
+        rows = [row for item in items for row in normalize_api_rows(item, category_map, store_names)]
+        print(f"[DEBUG] Fetched {len(items)} items; {len(rows)} variant/store thresholds from Loyverse API", file=sys.stderr)
         inventory_levels = fetch_loyverse_inventory_levels(api_token, resolved_base_url)
-        if not inventory_levels:
+        if rows and not inventory_levels:
             raise LiveInventoryUnavailable(
                 "Loyverse returned no live inventory levels; refusing to post quantities from the static CSV export."
             )
         print(f"[DEBUG] Fetched {len(inventory_levels)} live inventory levels from Loyverse API", file=sys.stderr)
-        rows = apply_live_inventory_quantities(rows, inventory_levels)
-        merged = merge_api_rows_with_thresholds(rows, csv_path)
-        print(f"[DEBUG] {len(merged)} items have thresholds after merge", file=sys.stderr)
-        return merged
+        return apply_live_inventory_quantities(rows, inventory_levels)
 
     rows = parse_export_csv(csv_path) if csv_path else []
     print(f"[DEBUG] Parsed {len(rows)} rows from CSV", file=sys.stderr)
@@ -735,18 +631,16 @@ def telegram_send_message(text: str, bot_token: str | None = None, chat_id: str 
     try:
         with urllib.request.urlopen(req, timeout=30) as response:
             body = response.read().decode("utf-8", errors="replace")
-            if "ok" in body.lower():
+            result = json.loads(body)
+            if isinstance(result, dict) and result.get("ok") is True:
                 # Update the latest timestamp for this topic to prevent future older messages.
                 if event_time and target:
                     set_latest_topic_timestamp(target, topic_id, event_time)
                 print(f"[OK] Telegram message posted to chat {target} topic {topic_id}", file=sys.stderr)
                 if on_success is not None:
-                    try:
-                        on_success(json.loads(body))
-                    except (json.JSONDecodeError, TypeError):
-                        pass
+                    on_success(result)
                 return True
-            print(f"[ERROR] Telegram API response missing 'ok': {body[:200]}", file=sys.stderr)
+            print(f"[ERROR] Telegram API rejected message: {body[:200]}", file=sys.stderr)
             return False
     except urlerror.HTTPError as http_exc:
         # Capture HTTP error details including response body
@@ -761,6 +655,25 @@ def telegram_send_message(text: str, bot_token: str | None = None, chat_id: str 
         return False
 
 
+def split_alert_message(message: str) -> list[str]:
+    """Split at line boundaries without breaking HTML tags or escaped item names."""
+    chunks: list[str] = []
+    current: list[str] = []
+    length = 0
+    for line in message.split("\n"):
+        line_length = len(line.encode("utf-16-le")) // 2
+        if line_length > 4096:
+            raise ValueError("A low-stock alert line exceeds Telegram's 4096-character limit")
+        if current and length + 1 + line_length > 4096:
+            chunks.append("\n".join(current))
+            current, length = [], 0
+        length += line_length + (1 if current else 0)
+        current.append(line)
+    if current:
+        chunks.append("\n".join(current))
+    return chunks
+
+
 def send_low_stock_alert(
     message: str,
     bot_token: str | None,
@@ -771,40 +684,59 @@ def send_low_stock_alert(
 ) -> bool:
     state = load_alert_state(state_path)
     message_hash = hashlib.sha256(message.encode("utf-8")).hexdigest()
-    previous_message_id = state.get("message_id")
+    previous_message_ids = state.get("message_ids") or (
+        [state["message_id"]] if state.get("message_id") is not None else []
+    )
     same_topic = state.get("chat_id") == chat_id and state.get("topic_id") == topic_id
     if same_topic and state.get("message_hash") == message_hash:
         print("[OK] Low stock alert is unchanged; keeping the existing message", file=sys.stderr)
         return True
 
-    new_message_id: dict[str, Any] = {}
+    try:
+        parts = split_alert_message(message)
+    except ValueError as exc:
+        print(f"[ERROR] {exc}", file=sys.stderr)
+        return False
+    new_message_ids: list[int | str] = []
 
     def capture_message_id(body: dict[str, Any]) -> None:
         result = body.get("result") or {}
         if isinstance(result, dict) and result.get("message_id") is not None:
-            new_message_id["message_id"] = result["message_id"]
+            new_message_ids.append(result["message_id"])
 
-    success = telegram_send_message(
-        message,
-        bot_token=bot_token,
-        chat_id=chat_id,
-        topic_id=topic_id,
-        event_time=event_time,
-        on_success=capture_message_id,
-    )
-    if success and new_message_id.get("message_id") is not None and chat_id:
-        if previous_message_id and bot_token and same_topic:
-            telegram_delete_message(bot_token, chat_id, previous_message_id)
+    for index, part in enumerate(parts):
+        if index:
+            # Telegram groups allow at most 20 messages per minute.
+            time.sleep(3)
+        success = telegram_send_message(
+            part,
+            bot_token=bot_token,
+            chat_id=chat_id,
+            topic_id=topic_id,
+            event_time=event_time,
+            on_success=capture_message_id,
+        )
+        if not success or len(new_message_ids) != index + 1:
+            print("[ERROR] Low stock alert delivery is incomplete; keeping previous alert state", file=sys.stderr)
+            if bot_token and chat_id:
+                for message_id in new_message_ids:
+                    telegram_delete_message(bot_token, chat_id, message_id)
+            return False
+    if chat_id:
+        if bot_token and same_topic:
+            for message_id in previous_message_ids:
+                telegram_delete_message(bot_token, chat_id, message_id)
         save_alert_state(
             {
                 "chat_id": chat_id,
                 "topic_id": topic_id,
-                "message_id": new_message_id["message_id"],
+                "message_id": new_message_ids[0],
+                "message_ids": new_message_ids,
                 "message_hash": message_hash,
             },
             state_path,
         )
-    return success
+    return True
 
 
 def main() -> int:
@@ -812,6 +744,10 @@ def main() -> int:
     if csv_path is None:
         csv_path = "export_items-11.csv" if Path("export_items-11.csv").exists() else None
     api_token = os.environ.get("LOYVERSE_API_TOKEN")
+    send_requested = os.environ.get("SEND_TELEGRAM_MESSAGE", "false").lower() in {"1", "true", "yes"}
+    if send_requested and not api_token:
+        print("[ERROR] LOYVERSE_API_TOKEN is required to post live stock alerts", file=sys.stderr)
+        return 1
     base_url = os.environ.get("LOYVERSE_API_BASE_URL") or "https://api.loyverse.com/v1.0"
     try:
         message = build_daily_low_stock_message(csv_path, api_token=api_token, base_url=base_url)
@@ -820,7 +756,7 @@ def main() -> int:
         return 1
     print(message)
 
-    if os.environ.get("SEND_TELEGRAM_MESSAGE", "false").lower() in {"1", "true", "yes"}:
+    if send_requested:
         event_time = os.environ.get("EVENT_TIME")
         success = send_low_stock_alert(
             message,

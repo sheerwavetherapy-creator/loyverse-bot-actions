@@ -24,6 +24,8 @@ jobs:
         with:
           python-version: '3.12'
 
+      # Live quantities and low-stock thresholds are matched per variant and store.
+      # EXPORT_CSV_PATH is used only for offline runs without Telegram delivery.
       - name: Generate low stock alert block
         env:
           EXPORT_CSV_PATH: ${{ vars.EXPORT_CSV_PATH || 'export_items-11.csv' }}

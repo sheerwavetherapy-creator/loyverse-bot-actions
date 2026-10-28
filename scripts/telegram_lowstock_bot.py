@@ -11,6 +11,7 @@ from pathlib import Path
 from urllib import error, parse, request
 
 from scripts.low_stock_alerts import (
+    LiveInventoryUnavailable,
     build_daily_low_stock_message,
     send_low_stock_alert,
     telegram_send_message,
@@ -114,6 +115,8 @@ def main() -> int:
     if csv_path is None and Path("export_items-11.csv").exists():
         csv_path = "export_items-11.csv"
     api_token = os.environ.get("LOYVERSE_API_TOKEN")
+    if not api_token:
+        raise SystemExit("LOYVERSE_API_TOKEN is required for live /lowstock alerts")
     base_url = os.environ.get("LOYVERSE_API_BASE_URL") or "https://api.loyverse.com/v1.0"
     max_command_age_seconds = int(
         os.environ.get("TELEGRAM_COMMAND_MAX_AGE_SECONDS", DEFAULT_MAX_COMMAND_AGE_SECONDS)
@@ -147,7 +150,10 @@ def main() -> int:
                     max_command_age_seconds=max_command_age_seconds,
                 )
             offset_path.write_text(str(offset))
-        except (error.URLError, TimeoutError, ValueError, RuntimeError):
+        except LiveInventoryUnavailable as exc:
+            print(f"[ERROR] {exc}", file=sys.stderr)
+        except (error.URLError, TimeoutError, ValueError, RuntimeError) as exc:
+            print(f"[ERROR] Lowstock command processing failed ({type(exc).__name__})", file=sys.stderr)
             continue
 
 
