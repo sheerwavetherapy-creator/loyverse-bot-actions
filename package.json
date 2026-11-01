@@ -1,0 +1,9 @@
+{
+  "name": "loyverse-bot-actions",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "node --check scripts/recover-chronological.js",
+    "recover:chronological": "node scripts/recover-chronological.js"
+  }
+}
